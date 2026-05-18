@@ -1,6 +1,7 @@
+<h1 align="center">MLP Copilot</h1>
+
 <p align="center">
-  <strong>MLP Copilot</strong><br>
-  面向机器学习势能工作流的 evidence-oriented agent runtime
+  面向机器学习势能工作流的垂直 agent runtime
 </p>
 
 <p align="center">
@@ -9,8 +10,6 @@
   <a href="./README.fr.md">Français</a> |
   <a href="./README.ja.md">日本語</a>
 </p>
-
-# MLP Copilot
 
 MLP Copilot 是面向机器学习势能工作流的垂直 agent runtime。它聚焦
 DeepMD-kit / DP-GEN 主动学习场景，强调 workspace 初始化、配置检查、运行状态投影、
@@ -22,16 +21,15 @@ artifact 跟踪、日志检查，以及需要人工审批的控制操作。
 | --- | --- |
 | Runtime host | Agent loop、session、memory、TUI、Telegram/API、MCP client、workspace、approval、artifact index |
 | MLP plugins | DP-GEN 控制、数据集验证、模型评估、报告、本地文档搜索 |
-| Evidence model | Run manifest、artifact hash、approval decision、tool log、状态投影 |
-| Human control | 高成本或破坏性动作必须阻塞等待人工审批 |
+| 可追溯性 | Run manifest、artifact hash、approval decision、tool log、状态投影 |
+| 人工控制 | 高成本或破坏性动作必须阻塞等待人工审批 |
 
 运行时只做宿主层能力。数据集验证算法、checkpoint 推理、benchmark 和具体科学判断
 应放在 MCP server 或 skill 中，而不是写进 core runtime。
 
 ## 安装要求
 
-- 已安装 Git，并且对 `flarecentury/mlpcopilot` private repo 有访问权限。
-- GitHub 已配置 SSH key。
+- Git。
 - Python 3.11 或更高版本。
 - `uv` 依赖管理工具。
 
@@ -41,13 +39,15 @@ artifact 跟踪、日志检查，以及需要人工审批的控制操作。
 python -m pip install --user uv
 ```
 
-确认 SSH key 可用：
+## 从源码安装
 
 ```bash
-ssh -T git@github.com
+git clone https://github.com/flarecentury/mlpcopilot.git
+cd mlpcopilot
+uv sync --extra dev
 ```
 
-## 从源码安装
+如果你更习惯使用 SSH：
 
 ```bash
 git clone git@github.com:flarecentury/mlpcopilot.git

@@ -1,6 +1,7 @@
+<h1 align="center">MLP Copilot</h1>
+
 <p align="center">
-  <strong>MLP Copilot</strong><br>
-  機械学習ポテンシャルワークフロー向けの evidence-oriented agent runtime
+  機械学習ポテンシャルワークフロー向けの垂直 agent runtime
 </p>
 
 <p align="center">
@@ -9,8 +10,6 @@
   <a href="./README.fr.md">Français</a> |
   <a href="./README.ja.md">日本語</a>
 </p>
-
-# MLP Copilot
 
 MLP Copilot は、機械学習ポテンシャル向けワークフローのための垂直 agent
 runtime です。現在は DeepMD-kit / DP-GEN のアクティブラーニング運用を中心に、
@@ -23,8 +22,8 @@ workspace 初期化、設定確認、実行状態の投影、artifact 追跡、�
 | --- | --- |
 | Runtime host | Agent loop、session、memory、TUI、Telegram/API gateway、MCP client、workspace、approval、artifact index |
 | MLP plugins | DP-GEN 制御、dataset validation、model evaluation、report、ローカル文書検索 |
-| Evidence model | Run manifest、artifact hash、approval decision、tool log、state projection |
-| Human control | 高コストまたは破壊的な操作に対する blocking approval |
+| トレーサビリティ | Run manifest、artifact hash、approval decision、tool log、state projection |
+| 人間による制御 | 高コストまたは破壊的な操作に対するブロッキング承認 |
 
 runtime はホスト層に限定します。科学アルゴリズム、DP-GEN セマンティクス、
 checkpoint 推論、benchmark、dataset validation は core runtime ではなく
@@ -32,8 +31,7 @@ MCP server または skill に置きます。
 
 ## 必要条件
 
-- `flarecentury/mlpcopilot` private repo にアクセスできる Git 環境。
-- GitHub に登録済みの SSH key。
+- Git。
 - Python 3.11 以上。
 - 依存関係管理用の `uv`。
 
@@ -43,13 +41,15 @@ MCP server または skill に置きます。
 python -m pip install --user uv
 ```
 
-SSH 接続を確認：
+## ソースからインストール
 
 ```bash
-ssh -T git@github.com
+git clone https://github.com/flarecentury/mlpcopilot.git
+cd mlpcopilot
+uv sync --extra dev
 ```
 
-## ソースからインストール
+SSH を使う場合：
 
 ```bash
 git clone git@github.com:flarecentury/mlpcopilot.git

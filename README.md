@@ -1,6 +1,7 @@
+<h1 align="center">MLP Copilot</h1>
+
 <p align="center">
-  <strong>MLP Copilot</strong><br>
-  Evidence-oriented agent runtime for machine-learning-potential workflows
+  Vertical agent runtime for machine-learning-potential workflows
 </p>
 
 <p align="center">
@@ -10,13 +11,11 @@
   <a href="./README.ja.md">日本語</a>
 </p>
 
-# MLP Copilot
-
 MLP Copilot is a vertical agent runtime for machine-learning-potential work. It
 originated from the general-purpose
 [`HKUDS/nanobot`](https://github.com/HKUDS/nanobot) agent runtime and is now
-narrowed toward local and remote scientific workflows where evidence, artifacts,
-human approvals, and traceable decisions matter.
+narrowed toward local and remote scientific workflows where artifacts, human
+approvals, and traceable decisions matter.
 
 The current product focus is DeepMD-kit / DP-GEN active-learning operations:
 workspace initialization, configuration checks, run-state projection, artifact
@@ -28,7 +27,7 @@ tracking, log inspection, and human-approved control actions.
 | --- | --- |
 | Runtime host | Agent loop, sessions, memory, TUI, Telegram/API gateways, MCP client, workspace, approvals, artifact index |
 | MLP plugins | DP-GEN control, dataset validation, model evaluation, reporting, local document search |
-| Evidence model | Run manifests, artifact hashes, approval decisions, tool logs, status projections |
+| Traceability | Run manifests, artifact hashes, approval decisions, tool logs, status projections |
 | Human control | Blocking approvals for high-cost or destructive actions |
 
 The runtime must stay at the host layer. Scientific algorithms, DP-GEN
@@ -37,8 +36,7 @@ logic belong in MCP servers or skills, not in core runtime code.
 
 ## Requirements
 
-- Git with access to the private repository.
-- SSH key added to GitHub for the `flarecentury/mlpcopilot` repository.
+- Git.
 - Python 3.11 or newer.
 - `uv` for dependency management.
 
@@ -48,15 +46,16 @@ Install `uv` if needed:
 python -m pip install --user uv
 ```
 
-Check GitHub SSH access:
-
-```bash
-ssh -T git@github.com
-```
-
 ## Install From Source
 
-Clone the private repository:
+Clone the repository:
+
+```bash
+git clone https://github.com/flarecentury/mlpcopilot.git
+cd mlpcopilot
+```
+
+If you prefer SSH:
 
 ```bash
 git clone git@github.com:flarecentury/mlpcopilot.git

@@ -1,6 +1,7 @@
+<h1 align="center">MLP Copilot</h1>
+
 <p align="center">
-  <strong>MLP Copilot</strong><br>
-  Runtime d'agent orienté preuves pour les workflows de potentiel d'apprentissage automatique
+  Runtime d'agent vertical pour les workflows de potentiel d'apprentissage automatique
 </p>
 
 <p align="center">
@@ -9,8 +10,6 @@
   <a href="./README.fr.md">Français</a> |
   <a href="./README.ja.md">日本語</a>
 </p>
-
-# MLP Copilot
 
 MLP Copilot est un runtime d'agent vertical pour les workflows de potentiel
 d'apprentissage automatique. Il cible aujourd'hui les opérations
@@ -24,7 +23,7 @@ inspection des logs et actions de contrôle validées par un humain.
 | --- | --- |
 | Runtime hôte | Agent loop, sessions, mémoire, TUI, passerelles Telegram/API, client MCP, workspace, approvals, index d'artefacts |
 | Plugins MLP | Contrôle DP-GEN, validation de datasets, évaluation de modèles, rapports, recherche documentaire locale |
-| Modèle de preuve | Run manifests, hashes d'artefacts, décisions d'approbation, logs d'outils, projections d'état |
+| Traçabilité | Run manifests, hashes d'artefacts, décisions d'approbation, logs d'outils, projections d'état |
 | Contrôle humain | Approbations bloquantes pour actions coûteuses ou destructrices |
 
 Le runtime reste la couche hôte. Les algorithmes scientifiques, la sémantique
@@ -33,8 +32,7 @@ doivent rester dans les serveurs MCP ou les skills.
 
 ## Prérequis
 
-- Git avec accès au dépôt privé `flarecentury/mlpcopilot`.
-- Une clé SSH GitHub autorisée pour ce dépôt.
+- Git.
 - Python 3.11 ou plus récent.
 - `uv` pour gérer les dépendances.
 
@@ -44,13 +42,15 @@ Installer `uv` si nécessaire :
 python -m pip install --user uv
 ```
 
-Vérifier l'accès SSH :
+## Installation depuis le code source
 
 ```bash
-ssh -T git@github.com
+git clone https://github.com/flarecentury/mlpcopilot.git
+cd mlpcopilot
+uv sync --extra dev
 ```
 
-## Installation depuis le code source
+Si vous préférez SSH :
 
 ```bash
 git clone git@github.com:flarecentury/mlpcopilot.git
