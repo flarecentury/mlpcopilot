@@ -1,0 +1,22 @@
+{
+  "name": "dpgen_adapter",
+  "kind": "runtime_adapter",
+  "agent_visible": false,
+  "domain": "mlp.training.dpgen",
+  "entrypoint": "mlpcopilot.plugins.dpgen_adapter",
+  "outputs": [
+    "run_state",
+    "artifact_records",
+    "display_document"
+  ],
+  "triggers": [
+    "workspace.init",
+    "tui.open",
+    "project.selected",
+    "run.selected",
+    "tool.finished",
+    "approval.decided",
+    "manual.refresh"
+  ]
+}
+

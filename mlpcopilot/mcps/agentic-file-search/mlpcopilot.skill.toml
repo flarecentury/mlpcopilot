@@ -1,0 +1,44 @@
+[skill]
+name = "agentic-file-search"
+version = "0.1.0"
+description = "Package-level Agentic File Search MCP project for local knowledge-base search."
+entrypoint = "../../skills/agentic-file-search/SKILL.md"
+package = "agentic-file-search-mcp"
+
+[init]
+script = "scripts/init-skill.sh"
+project_dir = "."
+env_file = ".env"
+default_knowledge_root = "~/.mlpcopilot/workspace/knowledge"
+default_db_path = "~/.mlpcopilot/workspace/knowledge/fs-explorer.duckdb"
+
+[mcp]
+server_name = "agentic-file-search"
+tool_timeout = 120
+enabled_tools = ["agentic_explore"]
+
+[mcp.stdio]
+command = "uv"
+args = ["--directory", "{mcp_dir}", "run", "agentic-file-search-mcp"]
+
+[mcp.http]
+command = "scripts/start-mcp-http.sh"
+url = "http://127.0.0.1:8765/mcp"
+transport = "streamableHttp"
+
+[env.defaults]
+FS_EXPLORER_MCP_ROOT = "~/.mlpcopilot/workspace/knowledge"
+FS_EXPLORER_DB_PATH = "~/.mlpcopilot/workspace/knowledge/fs-explorer.duckdb"
+FS_EXPLORER_OPENAI_COMPAT_BASE_URL = "http://127.0.0.1:8000/v1"
+FS_EXPLORER_OPENAI_COMPAT_MODEL = "local-model"
+FS_EXPLORER_AGENT_USE_INDEX = "1"
+FS_EXPLORER_MCP_ALLOW_INDEXING = "1"
+FS_EXPLORER_MCP_AUTO_REFRESH_INDEX = "1"
+FS_EXPLORER_MCP_ALLOW_EMBEDDINGS = "0"
+FS_EXPLORER_MCP_ALLOW_METADATA = "0"
+FS_EXPLORER_MCP_DISCOVER_SCHEMA = "0"
+FS_EXPLORER_MCP_INDEX_WORKERS = "4"
+FS_EXPLORER_AGENT_TIMEOUT = "120"
+FS_EXPLORER_MCP_HTTP_HOST = "127.0.0.1"
+FS_EXPLORER_MCP_HTTP_PORT = "8765"
+FS_EXPLORER_MCP_HTTP_PATH = "/mcp"

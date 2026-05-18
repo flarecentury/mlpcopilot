@@ -1,0 +1,69 @@
+{
+  "type_map": ["Fe", "C", "H"],
+  "mass_map": [55.845, 12.011, 1.008],
+  "init_data_prefix": "./data.init",
+  "init_data_sys": ["deepmd"],
+  "init_batch_size": [1],
+  "sys_configs": [["systems/fech_demo/POSCAR"]],
+  "sys_batch_size": [1],
+  "numb_models": 4,
+  "default_training_param": {
+    "model": {
+      "descriptor": {
+        "type": "se_e2_a",
+        "sel": [16, 8, 4],
+        "rcut": 6.0,
+        "rcut_smth": 0.5,
+        "neuron": [16, 32, 64],
+        "axis_neuron": 8
+      },
+      "fitting_net": {
+        "neuron": [64, 64, 64]
+      }
+    },
+    "learning_rate": {
+      "type": "exp",
+      "start_lr": 0.001,
+      "stop_lr": 1e-8,
+      "decay_steps": 100
+    },
+    "loss": {
+      "start_pref_e": 0.02,
+      "limit_pref_e": 1,
+      "start_pref_f": 100,
+      "limit_pref_f": 1
+    },
+    "training": {
+      "stop_batch": 100,
+      "disp_file": "lcurve.out",
+      "disp_freq": 10,
+      "save_freq": 50,
+      "training_data": {
+        "systems": [],
+        "batch_size": 1
+      }
+    }
+  },
+  "model_devi_dt": 0.001,
+  "model_devi_skip": 0,
+  "model_devi_f_trust_lo": 0.05,
+  "model_devi_f_trust_hi": 0.20,
+  "model_devi_jobs": [
+    {
+      "sys_idx": [0],
+      "temps": [1200],
+      "press": [10.0],
+      "trj_freq": 10,
+      "nsteps": 100,
+      "ensemble": "npt"
+    }
+  ],
+  "fp_style": "custom",
+  "fp_task_min": 1,
+  "fp_task_max": 2,
+  "fp_params": {
+    "input_fn": "POSCAR",
+    "output_fn": "OUTCAR",
+    "output_fmt": "vasp/outcar"
+  }
+}

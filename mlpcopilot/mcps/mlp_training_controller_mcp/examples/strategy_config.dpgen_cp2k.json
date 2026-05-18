@@ -1,0 +1,33 @@
+{
+  "numb_models": 4,
+  "type_map": ["O", "Al"],
+  "mass_map": [15.999, 26.981539],
+  "descriptor_type": "se_e2_a",
+  "descriptor_sel": [128, 128],
+  "rcut": 8.0,
+  "rcut_smth": 0.5,
+  "numb_steps": 250000,
+  "model_devi_activation_func": [
+    ["tanh", "tanh"],
+    ["tanh", "gelu"],
+    ["gelu", "tanh"],
+    ["gelu", "gelu"]
+  ],
+  "model_devi_dt": 0.0005,
+  "model_devi_skip": 0,
+  "model_devi_f_trust_lo": 0.08,
+  "model_devi_f_trust_hi": 0.7,
+  "model_devi_merge_traj": true,
+  "model_devi_clean_traj": false,
+  "nsteps_schedule": [5000, 10000, 20000, 40000],
+  "trj_freq_schedule": [50, 100, 100, 100],
+  "fp_task_max": 600,
+  "fp_task_min": 20,
+  "fp_style": "cp2k",
+  "external_input_path": "./template_d3.inp",
+  "fp_pp_path": ".",
+  "fp_pp_files": [],
+  "sys_format": "vasp/poscar",
+  "sys_configs_prefix": "../0_MODEL/"
+}
+

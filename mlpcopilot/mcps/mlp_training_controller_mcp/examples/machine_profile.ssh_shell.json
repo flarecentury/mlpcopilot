@@ -1,0 +1,62 @@
+{
+  "api_version": "1.0",
+  "deepmd_version": "2.2.1",
+  "train": {
+    "command": "bash /path/to/dp_gpu_wrapper.sh",
+    "context_type": "SSHContext",
+    "batch_type": "shell",
+    "remote_root": "/remote/dpgen/run/train",
+    "remote_profile": {
+      "hostname": "example.internal",
+      "username": "mlp-user",
+      "port": 22,
+      "look_for_keys": true,
+      "timeout": 10,
+      "tar_compress": true
+    },
+    "number_node": 1,
+    "cpu_per_node": 1,
+    "gpu_per_node": 2,
+    "group_size": 1,
+    "source_list": ["/path/to/env.sh"]
+  },
+  "model_devi": {
+    "command": "bash /path/to/lmp_dp_gpu_wrapper.sh",
+    "context_type": "SSHContext",
+    "batch_type": "shell",
+    "remote_root": "/remote/dpgen/run/model_devi",
+    "remote_profile": {
+      "hostname": "example.internal",
+      "username": "mlp-user",
+      "port": 22,
+      "look_for_keys": true,
+      "timeout": 10,
+      "tar_compress": true
+    },
+    "number_node": 4,
+    "cpu_per_node": 1,
+    "gpu_per_node": 1,
+    "group_size": 1,
+    "source_list": ["/path/to/env.sh"]
+  },
+  "fp": {
+    "command": "bash /path/to/cp2k_cpu_wrapper.sh -in *.inp",
+    "context_type": "SSHContext",
+    "batch_type": "shell",
+    "remote_root": "/remote/dpgen/run/fp",
+    "remote_profile": {
+      "hostname": "example.internal",
+      "username": "mlp-user",
+      "port": 22,
+      "look_for_keys": true,
+      "timeout": 10,
+      "tar_compress": true
+    },
+    "number_node": 1,
+    "cpu_per_node": 1,
+    "gpu_per_node": 0,
+    "group_size": 1,
+    "source_list": ["/path/to/env.sh"]
+  }
+}
+

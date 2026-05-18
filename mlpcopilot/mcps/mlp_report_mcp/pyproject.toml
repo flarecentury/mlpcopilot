@@ -1,0 +1,19 @@
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "mlp-report-mcp"
+version = "0.1.0"
+description = "MCP server for evidence-based MLP workflow report generation."
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.14.5",
+]
+
+[project.scripts]
+mlp-report-mcp = "mlp_report_mcp.server:main"
+mlp-report-mcp-stdio = "mlp_report_mcp.server:main"
+
+[tool.uv.build-backend]
+module-name = "mlp_report_mcp"

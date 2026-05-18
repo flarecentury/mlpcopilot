@@ -1,0 +1,23 @@
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "mlp-model-eval-mcp"
+version = "0.1.0"
+description = "MCP server for MLP checkpoint metadata and metrics artifact evaluation."
+requires-python = ">=3.11"
+dependencies = [
+    "ase>=3.22.0",
+    "fastmcp>=2.14.5",
+    "matplotlib>=3.7.0",
+    "numpy>=1.24.0",
+    "pyyaml>=6.0,<7.0",
+]
+
+[project.scripts]
+mlp-model-eval-mcp = "mlp_model_eval_mcp.server:main"
+mlp-model-eval-mcp-stdio = "mlp_model_eval_mcp.server:main"
+
+[tool.uv.build-backend]
+module-name = "mlp_model_eval_mcp"

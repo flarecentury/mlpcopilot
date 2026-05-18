@@ -1,0 +1,47 @@
+{
+  "train": {
+    "command": "echo mock deepmd training",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "local",
+      "local_root": "./",
+      "remote_root": "./remote"
+    },
+    "resources": {
+      "number_node": 1,
+      "cpu_per_node": 1,
+      "gpu_per_node": 0,
+      "group_size": 1
+    }
+  },
+  "model_devi": {
+    "command": "echo mock lammps model deviation",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "local",
+      "local_root": "./",
+      "remote_root": "./remote"
+    },
+    "resources": {
+      "number_node": 1,
+      "cpu_per_node": 1,
+      "gpu_per_node": 0,
+      "group_size": 1
+    }
+  },
+  "fp": {
+    "command": "echo mock first-principles label",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "local",
+      "local_root": "./",
+      "remote_root": "./remote"
+    },
+    "resources": {
+      "number_node": 1,
+      "cpu_per_node": 1,
+      "gpu_per_node": 0,
+      "group_size": 1
+    }
+  }
+}

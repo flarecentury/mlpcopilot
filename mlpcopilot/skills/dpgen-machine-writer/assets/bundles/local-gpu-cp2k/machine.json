@@ -1,0 +1,89 @@
+{
+  "api_version": "1.0",
+  "deepmd_version": "3.1.3",
+  "train": {
+    "command": "bash wrappers/dp_gpu_apptainer.sh",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "local",
+      "local_root": "./",
+      "remote_root": "./remote/train",
+      "clean_asynchronously": false
+    },
+    "resources": {
+      "batch_type": "Shell",
+      "number_node": 1,
+      "cpu_per_node": 8,
+      "gpu_per_node": 1,
+      "group_size": 4,
+      "para_deg": 1,
+      "source_list": [],
+      "envs": {
+        "OMP_NUM_THREADS": "1"
+      },
+      "wait_time": 0
+    },
+    "user_forward_files": [
+      "wrappers/dp_gpu_apptainer.sh"
+    ],
+    "user_backward_files": []
+  },
+  "model_devi": {
+    "command": "bash wrappers/lmp_gpu_apptainer.sh",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "local",
+      "local_root": "./",
+      "remote_root": "./remote/model_devi",
+      "clean_asynchronously": false
+    },
+    "resources": {
+      "batch_type": "Shell",
+      "number_node": 1,
+      "cpu_per_node": 8,
+      "gpu_per_node": 1,
+      "group_size": 8,
+      "para_deg": 1,
+      "source_list": [],
+      "envs": {
+        "OMP_NUM_THREADS": "1"
+      },
+      "wait_time": 0
+    },
+    "user_forward_files": [
+      "wrappers/lmp_gpu_apptainer.sh"
+    ],
+    "user_backward_files": [
+      "model_devi.out"
+    ]
+  },
+  "fp": {
+    "command": "bash wrappers/cp2k_apptainer.sh -i input.inp -o output.out",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "local",
+      "local_root": "./",
+      "remote_root": "./remote/fp",
+      "clean_asynchronously": false
+    },
+    "resources": {
+      "batch_type": "Shell",
+      "number_node": 1,
+      "cpu_per_node": 16,
+      "gpu_per_node": 0,
+      "group_size": 1,
+      "para_deg": 1,
+      "source_list": [],
+      "envs": {
+        "OMP_NUM_THREADS": "1"
+      },
+      "wait_time": 0
+    },
+    "user_forward_files": [
+      "wrappers/cp2k_apptainer.sh"
+    ],
+    "user_backward_files": [
+      "output.out"
+    ]
+  }
+}

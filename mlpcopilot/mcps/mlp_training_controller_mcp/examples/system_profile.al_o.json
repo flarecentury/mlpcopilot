@@ -1,0 +1,22 @@
+{
+  "elements": ["O", "Al"],
+  "system_type": "bulk+surface",
+  "initial_data": [
+    "init_data/data_final/O0Al108",
+    "init_data/data_final/O0Al128",
+    "init_data/data_final/O48Al32"
+  ],
+  "exploration_structures": [
+    "sorted_Supercell_Al_333.vasp",
+    "sorted_Supercell_Al2O3_142.vasp",
+    "Al_mp-998860_conventional_444.vasp",
+    "Al2O3_mp-1143_conventional_221.vasp",
+    "Al2O3_mp-2254_conventional_211.vasp"
+  ],
+  "target_conditions": {
+    "temperature_k": [200, 400, 600, 800, 1000, 1500, 2000, 2500, 2725, 3000],
+    "pressure_bar": [1.0, 10.0, 100.0, 1000.0, 10000.0],
+    "ensemble": ["nvt"]
+  }
+}
+

@@ -1,0 +1,143 @@
+# Contributing to mlpcopilot
+
+Thank you for being here.
+
+mlpcopilot is built with a simple belief: good tools should feel calm, clear, and humane.
+We care deeply about useful features, but we also believe in achieving more with less:
+solutions should be powerful without becoming heavy, and ambitious without becoming
+needlessly complicated.
+
+This guide is not only about how to open a PR. It is also about how we hope to build
+software together: with care, clarity, and respect for the next person reading the code.
+
+## Maintainers
+
+| Maintainer | Focus |
+|------------|-------|
+| [@flarecentury](https://github.com/flarecentury) | Project maintenance, releases, and repository policy |
+
+## Branching Strategy
+
+We use a two-branch model to balance stability and exploration:
+
+| Branch | Purpose | Stability |
+|--------|---------|-----------|
+| `main` | Stable releases | Production-ready |
+| `nightly` | Experimental features | May have bugs or breaking changes |
+
+### Which Branch Should I Target?
+
+**Target `nightly` if your PR includes:**
+
+- New features or functionality
+- Refactoring that may affect existing behavior
+- Changes to APIs or configuration
+
+**Target `main` if your PR includes:**
+
+- Bug fixes with no behavior changes
+- Documentation improvements
+- Minor tweaks that don't affect functionality
+
+**When in doubt, target `nightly`.** It is easier to move a stable idea from `nightly`
+to `main` than to undo a risky change after it lands in the stable branch.
+
+### Starting Work
+
+Before making changes, sync the target branch and create a topic branch from it.
+For stable bug fixes and documentation-only changes, start from the latest `main`.
+For experimental work, start from the latest `nightly`.
+
+```bash
+git fetch upstream
+git switch main
+git pull --ff-only upstream main
+git switch -c your-topic-branch
+```
+
+Use your primary flarecentury/mlpcopilot remote in place of `upstream` if your checkout
+uses a different remote name.
+
+Keep unrelated local changes out of the topic branch. If your checkout already has
+work in progress, use a separate worktree or finish that work before starting a
+new branch.
+
+### How Does Nightly Get Merged to Main?
+
+We don't merge the entire `nightly` branch. Instead, stable features are **cherry-picked** from `nightly` into individual PRs targeting `main`:
+
+```
+nightly  ──┬── feature A (stable) ──► PR ──► main
+           ├── feature B (testing)
+           └── feature C (stable) ──► PR ──► main
+```
+
+This happens approximately **once a week**, but the timing depends on when features become stable enough.
+
+### Quick Summary
+
+| Your Change | Target Branch |
+|-------------|---------------|
+| New feature | `nightly` |
+| Bug fix | `main` |
+| Documentation | `main` |
+| Refactoring | `nightly` |
+| Unsure | `nightly` |
+
+## Development Setup
+
+Keep setup boring and reliable. The goal is to get you into the code quickly:
+
+```bash
+# Clone the repository
+git clone https://github.com/flarecentury/mlpcopilot.git
+cd mlpcopilot
+
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Lint code
+ruff check mlpcopilot/
+
+# Format code
+ruff format mlpcopilot/
+```
+
+## Contribution License
+
+By submitting a contribution, you confirm that you have the right to submit it
+and agree that it will be licensed under the project's MIT License.
+
+## Code Style
+
+We care about more than passing lint. We want mlpcopilot to stay small, calm, and readable.
+
+When contributing, please aim for code that feels:
+
+- Simple: prefer the smallest change that solves the real problem
+- Clear: optimize for the next reader, not for cleverness
+- Decoupled: keep boundaries clean and avoid unnecessary new abstractions
+- Honest: do not hide complexity, but do not create extra complexity either
+- Durable: choose solutions that are easy to maintain, test, and extend
+
+In practice:
+
+- Line length: 100 characters (`ruff`)
+- Target: Python 3.11+
+- Linting: `ruff` with rules E, F, I, N, W (E501 ignored)
+- Async: uses `asyncio` throughout; pytest with `asyncio_mode = "auto"`
+- Prefer readable code over magical code
+- Prefer focused patches over broad rewrites
+- If a new abstraction is introduced, it should clearly reduce complexity rather than move it around
+
+## Questions?
+
+If you have questions, ideas, or half-formed insights, you are warmly welcome here.
+
+Please feel free to open an [issue](https://github.com/flarecentury/mlpcopilot/issues)
+or start a [discussion](https://github.com/flarecentury/mlpcopilot/discussions).
+
+Thank you for spending your time and care on mlpcopilot. We would love for more people to participate in this community, and we genuinely welcome contributions of all sizes.

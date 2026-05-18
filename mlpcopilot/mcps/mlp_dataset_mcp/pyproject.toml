@@ -1,0 +1,20 @@
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "mlp-dataset-mcp"
+version = "0.1.0"
+description = "MCP server for machine-learning-potential dataset inspection and validation."
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.14.5",
+    "pyyaml>=6.0,<7.0",
+]
+
+[project.scripts]
+mlp-dataset-mcp = "mlp_dataset_mcp.server:main"
+mlp-dataset-mcp-stdio = "mlp_dataset_mcp.server:main"
+
+[tool.uv.build-backend]
+module-name = "mlp_dataset_mcp"

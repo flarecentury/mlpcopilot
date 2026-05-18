@@ -1,0 +1,4 @@
+LAMMPS mock model-deviation run
+ensemble npt temp 1200 pressure 10.0
+steps 100
+finished

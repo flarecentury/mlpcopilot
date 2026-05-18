@@ -1,0 +1,46 @@
+variable        NSTEPS          equal V_NSTEPS
+variable        TIMESTEP        equal V_TIMESTEP
+variable        THERMO_FREQ     equal V_THERMO_FREQ
+variable        TAU_T           equal V_TAU_T
+variable        TEMP            equal V_TEMP
+# timestep 0.000500   0.5fs
+
+# If your LAMMPS build requires an explicit DeePMD plugin, set the path locally.
+# plugin load /path/to/libdeepmd_lmp.so
+
+###### for npt
+# variable        TAU_P           equal TAU_P # for npt 0.500000
+# variable        PRES            equal PRES  # 0.500000
+###### for nvt
+# variable        TEMP            equal V_TEMP
+# variable        TAU_T           equal V_TAU_T # 0.100000
+
+units           metal
+boundary        p p p
+atom_style      atomic
+
+neighbor        1.0 bin
+
+box          tilt large
+if "${restart} > 0" then "read_restart dpgen.restart.*" else "read_data conf.lmp"
+change_box   all triclinic
+mass            1 15.999000
+mass            2 26.981539
+pair_style      deepmd ../graph.000.pth ../graph.001.pth ../graph.002.pth ../graph.003.pth out_freq ${THERMO_FREQ} out_file model_devi.out
+#p#air_style      deepmd ../graph.000.pb ../graph.001.pb ../graph.002.pb ../graph.003.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+
+pair_coeff      * *
+
+thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
+thermo          ${THERMO_FREQ}
+dump            dpgen_dump
+#dump            1 all custom ${DUMP_FREQ} all.lammpstrj id type x y z fx fy fz
+
+if "${restart} > 0" then "dump_modify   dpgen_dump   append yes"
+restart         10000 dpgen.restart
+
+if "${restart} == 0" then "velocity        all create ${TEMP} 460237"
+fix             1 all nvt temp ${TEMP} ${TEMP} ${TAU_T}
+
+timestep        ${TIMESTEP}
+run             ${NSTEPS} upto

@@ -1,0 +1,8 @@
+mock first-principles output
+free  energy   TOTEN  =       -42.125000 eV
+TOTAL-FORCE (eV/Angst)
+0.010 0.020 0.000
+-0.020 0.010 0.030
+0.000 -0.010 -0.020
+0.015 0.000 -0.010
+-0.005 -0.020 0.000

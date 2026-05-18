@@ -1,0 +1,114 @@
+#Basis setting
+@SET NREPA 1
+@SET NREPB 1
+@SET NREPC 1
+@SET COORDFILE coord.xyz
+@SET RUNTYPE ENERGY_FORCE
+@SET CUTOFF 400
+@SET JOBNAME DPGEN
+@SET PERIO xyz
+
+&MOTION
+   &PRINT
+      &RESTART
+         BACKUP_COPIES 3
+         &EACH
+            MD 1
+         &END EACH
+      &END RESTART
+      &RESTART_HISTORY
+         &EACH
+            MD 1
+         &END EACH
+      &END RESTART_HISTORY
+      &TRAJECTORY
+         &EACH
+            MD 1
+         &END EACH
+      &END TRAJECTORY
+   &END PRINT
+&END MOTION
+
+&FORCE_EVAL
+   METHOD QS
+   STRESS_TENSOR ANALYTICAL
+   &SUBSYS
+      &KIND O
+         BASIS_SET ORB DZVP-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q6
+      &END KIND
+      &KIND Al
+         BASIS_SET ORB DZVP-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q3
+      &END KIND
+      &COORD
+         @include ${COORDFILE}
+      &END COORD
+      &TOPOLOGY
+         MULTIPLE_UNIT_CELL ${NREPA} ${NREPB} ${NREPC}
+      &END TOPOLOGY
+      &CELL
+         ABC leave for dpgen
+         MULTIPLE_UNIT_CELL ${NREPA} ${NREPB} ${NREPC}
+         PERIODIC ${PERIO}
+      &END CELL
+   &END SUBSYS
+   &DFT
+      BASIS_SET_FILE_NAME BASIS_MOLOPT
+      POTENTIAL_FILE_NAME GTH_POTENTIALS
+      &XC
+         &XC_FUNCTIONAL
+            &PBE
+               SCALE_X 1.0 ! correlation part
+               SCALE_C 1.0 ! exchange part
+            &END PBE
+         &END XC_FUNCTIONAL
+         &vdW_POTENTIAL
+            DISPERSION_FUNCTIONAL PAIR_POTENTIAL
+            &PAIR_POTENTIAL
+               TYPE DFTD3(BJ)
+               CALCULATE_C9_TERM T
+               REFERENCE_C9_TERM T
+               LONG_RANGE_CORRECTION T
+               PARAMETER_FILE_NAME dftd3.dat
+               REFERENCE_FUNCTIONAL PBE
+               R_CUTOFF 15
+            &END PAIR_POTENTIAL
+         &END vdW_POTENTIAL
+      &END XC
+      &SCF
+         SCF_GUESS RESTART
+         EPS_SCF 1e-05
+         MAX_SCF 50
+         &OT
+            MINIMIZER DIIS
+            PRECONDITIONER FULL_SINGLE_INVERSE ! FULL_ALL
+         &END OT
+         &OUTER_SCF
+            EPS_SCF 1e-05
+            MAX_SCF 15
+         &END OUTER_SCF
+      &END SCF
+      &QS
+         EPS_DEFAULT 1e-13
+         ! EPS_PGF_ORB 1E-12
+         ! MIN_PAIR_LIST_RADIUS -1
+      &END QS
+      &MGRID
+         CUTOFF ${CUTOFF}
+         REL_CUTOFF 60.0
+      &END MGRID
+   &END DFT
+   &PRINT
+      &STRESS_TENSOR ON
+      &END STRESS_TENSOR
+      &FORCES ON
+      &END FORCES
+   &END PRINT
+&END FORCE_EVAL
+
+&GLOBAL
+   PROJECT_NAME ${JOBNAME}
+   RUN_TYPE ${RUNTYPE}
+   PRINT_LEVEL MEDIUM
+&END GLOBAL

@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fs-explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f4f1eb;
+            --bg-alt: #ebe7df;
+            --ink: #1a1a1a;
+            --ink-light: #4a4a4a;
+            --ink-muted: #8a8a8a;
+            --accent: #c45d3a;
+            --accent-light: #e8d5ce;
+            --success: #2d6a4f;
+            --border: #d4d0c8;
+            --shadow: rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        ::selection {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Layout */
+        .page {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Header */
+        .masthead {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid var(--ink);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .title-block {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+        }
+
+        .site-title {
+            font-family: 'Instrument Serif', serif;
+            font-size: 42px;
+            font-weight: 400;
+            letter-spacing: -1px;
+        }
+
+        .version {
+            font-size: 11px;
+            color: var(--ink-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ink-muted);
+        }
+
+        .status-dot.active {
+            background: var(--success);
+        }
+
+        .status-dot.error {
+            background: var(--accent);
+        }
+
+        /* Folder Section */
+        .folder-section {
+            margin-bottom: 20px;
+        }
+
+        .folder-row {
+            display: flex;
+        }
+
+        .folder-display {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-alt);
+            border: 2px solid var(--border);
+            padding: 12px 16px;
+        }
+
+        .folder-path {
+            font-size: 13px;
+            color: var(--ink-light);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: calc(100% - 80px);
+        }
+
+        .folder-btn {
+            background: transparent;
+            border: 1px solid var(--ink);
+            padding: 6px 16px;
+            font-family: inherit;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .folder-btn:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        /* Query Section */
+        .query-section {
+            margin-bottom: 40px;
+        }
+
+        .query-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 12px;
+        }
+
+        .query-row {
+            display: flex;
+            gap: 0;
+        }
+
+        .query-input {
+            flex: 1;
+            background: var(--bg);
+            border: 2px solid var(--ink);
+            border-right: none;
+            padding: 16px 20px;
+            font-family: inherit;
+            font-size: 16px;
+            color: var(--ink);
+        }
+
+        .query-input:focus {
+            outline: none;
+            background: #fff;
+        }
+
+        .query-input::placeholder {
+            color: var(--ink-muted);
+            font-style: italic;
+        }
+
+        .query-btn {
+            background: var(--ink);
+            color: var(--bg);
+            border: 2px solid var(--ink);
+            padding: 16px 32px;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .query-btn:hover:not(:disabled) {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .query-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Index Badge */
+        .index-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .index-badge:hover {
+            border-color: var(--ink);
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--ink-muted);
+        }
+
+        .badge-dot.indexed {
+            background: var(--success);
+        }
+
+        /* Search Mode Toggles */
+        .search-mode-section {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .search-mode-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            white-space: nowrap;
+        }
+
+        .search-mode-options {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border);
+        }
+
+        .search-mode-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 14px;
+            font-size: 12px;
+            color: var(--ink-light);
+            cursor: pointer;
+            border-right: 1px solid var(--border);
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .search-mode-options label:last-child {
+            border-right: none;
+        }
+
+        .search-mode-options label:has(input:checked) {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        .search-mode-options label.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .search-mode-options label.disabled input {
+            pointer-events: none;
+        }
+
+        .search-mode-options input[type="checkbox"] {
+            display: none;
+        }
+
+        /* Indexing Modal */
+        .indexing-modal {
+            max-width: 620px;
+        }
+
+        .indexing-modal .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .indexing-modal .schema-editor textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--bg-alt);
+            color: var(--ink);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 12px;
+            resize: vertical;
+            min-height: 160px;
+        }
+
+        .indexing-modal .schema-editor textarea:focus {
+            outline: none;
+            border-color: var(--ink-light);
+        }
+
+        .indexing-summary {
+            font-size: 13px;
+        }
+
+        .indexing-summary dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 16px;
+        }
+
+        .indexing-summary dt {
+            color: var(--ink-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .indexing-summary dd {
+            font-weight: 600;
+        }
+
+        .panel-btn {
+            background: transparent;
+            border: 1px solid var(--ink);
+            padding: 7px 16px;
+            font-family: inherit;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .panel-btn:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        .panel-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .panel-btn.primary {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        .panel-btn.primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-actions .modal-btn {
+            flex: 1;
+        }
+
+        .embed-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--ink-light);
+            margin-top: 14px;
+        }
+
+        .embed-toggle-row input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+
+        .profile-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ink-muted);
+            margin-bottom: 8px;
+        }
+
+        .profile-input {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--ink);
+            font-family: inherit;
+            font-size: 12px;
+            padding: 10px 12px;
+            resize: vertical;
+            min-height: 64px;
+            margin-bottom: 12px;
+        }
+
+        .profile-input:focus {
+            outline: none;
+            border-color: var(--ink-light);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 12px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--ink-light);
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            accent-color: var(--accent);
+        }
+
+        .panel-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .index-panel-message {
+            font-size: 12px;
+            color: var(--ink-muted);
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 1000px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Sections */
+        .section {
+            min-height: 400px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+        }
+
+        .section-meta {
+            font-size: 11px;
+            color: var(--ink-muted);
+        }
+
+        /* Steps */
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .step {
+            background: var(--bg-alt);
+            border-left: 3px solid var(--ink-muted);
+            padding: 16px 20px;
+            animation: appear 0.2s ease;
+        }
+
+        @keyframes appear {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step.scan { border-left-color: #0969da; }
+        .step.parse { border-left-color: var(--success); }
+        .step.preview { border-left-color: #8250df; }
+        .step.search { border-left-color: var(--accent); }
+        .step.navigate { border-left-color: #bf8700; }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .step-id {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .step-tool {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ink-light);
+        }
+
+        .step-target {
+            font-size: 13px;
+            color: var(--ink-light);
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .step-target::before {
+            content: '→ ';
+            color: var(--ink-muted);
+        }
+
+        .step-reason {
+            font-size: 12px;
+            color: var(--ink-muted);
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: var(--ink-muted);
+            text-align: center;
+        }
+
+        .empty-state .prompt {
+            font-family: 'Instrument Serif', serif;
+            font-size: 24px;
+            font-style: italic;
+            margin-bottom: 8px;
+            color: var(--ink-light);
+        }
+
+        .empty-state .hint {
+            font-size: 12px;
+        }
+
+        /* Result */
+        .result-content {
+            line-height: 1.8;
+        }
+
+        .result-text {
+            font-size: 15px;
+            white-space: pre-wrap;
+        }
+
+        .citation {
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 2px 6px;
+            font-size: 11px;
+            border-radius: 2px;
+        }
+
+        /* Sources */
+        .sources {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sources-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 12px;
+        }
+
+        .source-item {
+            font-size: 12px;
+            color: var(--ink-light);
+            padding: 4px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .source-item::before {
+            content: '●';
+            color: var(--accent);
+            font-size: 8px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--ink);
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-bar {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Instrument Serif', serif;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ink-muted);
+            margin-top: 4px;
+        }
+
+        /* Progress */
+        .progress-bar {
+            height: 3px;
+            background: var(--border);
+            margin-top: 40px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-bar.active .progress-fill {
+            animation: indeterminate 1.5s infinite;
+        }
+
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); width: 30%; }
+            50% { width: 50%; }
+            100% { transform: translateX(400%); width: 30%; }
+        }
+
+        /* Loading */
+        .loading-text {
+            font-style: italic;
+            color: var(--ink-muted);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Human Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(244, 241, 235, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg);
+            border: 2px solid var(--ink);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 8px 8px 0 var(--ink);
+        }
+
+        .modal-title {
+            font-family: 'Instrument Serif', serif;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .modal-question {
+            background: var(--bg-alt);
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal-input {
+            width: 100%;
+            border: 2px solid var(--ink);
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+        }
+
+        .modal-btn {
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .modal-btn:hover {
+            background: var(--accent);
+        }
+
+        .modal-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--ink);
+            color: var(--ink);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        /* Folder Modal */
+        .folder-modal {
+            max-width: 600px;
+        }
+
+        .folder-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .folder-nav-btn {
+            background: transparent;
+            border: 1px solid var(--ink);
+            padding: 6px 12px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .folder-nav-btn:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        .folder-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .folder-current {
+            font-size: 12px;
+            color: var(--ink-light);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-list {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            padding: 8px;
+            max-height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .folder-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.1s;
+        }
+
+        .folder-item:last-child {
+            border-bottom: none;
+        }
+
+        .folder-item:hover {
+            background: var(--bg);
+        }
+
+        .folder-item.selected {
+            background: var(--accent-light);
+        }
+
+        .folder-icon {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .folder-name {
+            font-size: 13px;
+        }
+
+        .folder-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .folder-actions .modal-btn {
+            flex: 1;
+        }
+
+        .folder-empty {
+            padding: 20px;
+            text-align: center;
+            color: var(--ink-muted);
+            font-style: italic;
+        }
+
+        .folder-info {
+            font-size: 11px;
+            color: var(--ink-muted);
+            margin-top: 4px;
+        }
+
+        /* Scrollbar */
+        .scrollable {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .scrollable::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable::-webkit-scrollbar-track {
+            background: var(--bg-alt);
+        }
+
+        .scrollable::-webkit-scrollbar-thumb {
+            background: var(--border);
+        }
+
+        .scrollable::-webkit-scrollbar-thumb:hover {
+            background: var(--ink-muted);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--ink-muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Masthead -->
+        <header class="masthead">
+            <div class="title-block">
+                <h1 class="site-title">fs-explorer</h1>
+                <span class="version">v0.1.0</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Ready</span>
+            </div>
+        </header>
+
+        <!-- Folder Selector -->
+        <section class="folder-section">
+            <div class="query-label">Target Folder</div>
+            <div class="folder-row">
+                <div class="folder-display" id="folderDisplay">
+                    <span class="folder-path" id="currentPath">.</span>
+                    <span class="index-badge" id="indexBadge" onclick="openIndexingModal()" style="display:none;">
+                        <span class="badge-dot" id="badgeDot"></span>
+                        <span id="badgeText">Not Indexed</span>
+                    </span>
+                    <button class="folder-btn" onclick="openFolderPicker()">Browse</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Query -->
+        <section class="query-section">
+            <div class="query-label">Query</div>
+            <div class="query-row">
+                <input
+                    type="text"
+                    class="query-input"
+                    id="queryInput"
+                    placeholder="What would you like to know about your documents?"
+                    autocomplete="off"
+                >
+                <button class="query-btn" id="queryBtn" onclick="startExploration()">
+                    Execute
+                </button>
+            </div>
+            <div class="search-mode-section" id="searchModeSection">
+                <div class="search-mode-label">Retrieval</div>
+                <div class="search-mode-options">
+                    <label><input type="checkbox" value="agentic" checked disabled><span>Agentic</span></label>
+                    <label class="disabled" id="smSemantic"><input type="checkbox" id="cbSemantic" value="semantic" disabled><span>Semantic</span></label>
+                    <label class="disabled" id="smMetadata"><input type="checkbox" id="cbMetadata" value="metadata" disabled><span>Metadata</span></label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress -->
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Steps -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-title">Execution Log</span>
+                    <span class="section-meta" id="stepCount">—</span>
+                </div>
+                <div class="scrollable">
+                    <div class="steps-list" id="stepsList">
+                        <div class="empty-state">
+                            <div class="prompt">Awaiting query...</div>
+                            <div class="hint">Enter a question to begin document exploration</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Result -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-title">Response</span>
+                </div>
+                <div class="result-content scrollable" id="resultContent">
+                    <div class="empty-state">
+                        <div class="prompt">No results yet</div>
+                        <div class="hint">Results with citations will appear here</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="statsBar" style="display: none;">
+            <div class="stat">
+                <div class="stat-value" id="statSteps">0</div>
+                <div class="stat-label">Steps</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statScanned">0</div>
+                <div class="stat-label">Scanned</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statParsed">0</div>
+                <div class="stat-label">Parsed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statCalls">0</div>
+                <div class="stat-label">API Calls</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statTokens">0</div>
+                <div class="stat-label">Tokens</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statCost">$0</div>
+                <div class="stat-label">Est. Cost</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Powered by Gemini 3 Flash · Documents parsed with Docling
+        </footer>
+    </div>
+
+    <!-- Human Modal -->
+    <div class="modal-overlay" id="humanModal">
+        <div class="modal">
+            <div class="modal-title">Input Required</div>
+            <div class="modal-question" id="modalQuestion"></div>
+            <textarea class="modal-input" id="modalInput" placeholder="Your response..."></textarea>
+            <button class="modal-btn" onclick="submitHumanResponse()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Folder Picker Modal -->
+    <div class="modal-overlay" id="folderModal">
+        <div class="modal folder-modal">
+            <div class="modal-title">Select Folder</div>
+            <div class="folder-nav">
+                <button class="folder-nav-btn" id="folderUpBtn" onclick="navigateUp()">↑ Parent</button>
+                <span class="folder-current" id="folderModalPath">.</span>
+            </div>
+            <div class="folder-list scrollable" id="folderList">
+                <div class="loading-text">Loading...</div>
+            </div>
+            <div class="folder-actions">
+                <button class="modal-btn secondary" onclick="closeFolderPicker()">Cancel</button>
+                <button class="modal-btn" onclick="selectCurrentFolder()">Select This Folder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indexing Config Modal -->
+    <div class="modal-overlay" id="indexingModal">
+        <div class="modal indexing-modal">
+            <div id="indexingModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let ws = null;
+        let stepCount = 0;
+        let isRunning = false;
+        let currentFolder = '.';
+        let browsingPath = '.';
+        let indexStatus = null;
+
+        // Tool styles
+        const toolStyles = {
+            scan_folder: 'scan',
+            preview_file: 'preview',
+            parse_file: 'parse',
+            read: 'preview',
+            grep: 'search',
+            glob: 'search',
+        };
+
+        // Elements
+        const queryInput = document.getElementById('queryInput');
+        const queryBtn = document.getElementById('queryBtn');
+        const stepsList = document.getElementById('stepsList');
+        const stepCountEl = document.getElementById('stepCount');
+        const resultContent = document.getElementById('resultContent');
+        const statsBar = document.getElementById('statsBar');
+        const progressBar = document.getElementById('progressBar');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const humanModal = document.getElementById('humanModal');
+        const folderModal = document.getElementById('folderModal');
+        const folderList = document.getElementById('folderList');
+        const folderModalPath = document.getElementById('folderModalPath');
+        const folderUpBtn = document.getElementById('folderUpBtn');
+        const currentPathEl = document.getElementById('currentPath');
+        const indexingModal = document.getElementById('indexingModal');
+        const indexingModalContent = document.getElementById('indexingModalContent');
+
+        // Enter key
+        queryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !isRunning) startExploration();
+        });
+
+        // ========== Index Badge + Status ==========
+
+        async function checkIndexStatus(folder) {
+            try {
+                const res = await fetch(`/api/index/status?folder=${encodeURIComponent(folder)}`);
+                indexStatus = await res.json();
+            } catch (e) {
+                indexStatus = { indexed: false };
+            }
+            updateIndexBadge();
+            updateSearchModeAvailability();
+        }
+
+        function updateIndexBadge() {
+            const badge = document.getElementById('indexBadge');
+            const dot = document.getElementById('badgeDot');
+            const text = document.getElementById('badgeText');
+            badge.style.display = 'inline-flex';
+
+            if (indexStatus && indexStatus.indexed) {
+                dot.className = 'badge-dot indexed';
+                text.textContent = `Indexed (${indexStatus.document_count} docs)`;
+            } else {
+                dot.className = 'badge-dot';
+                text.textContent = 'Not Indexed';
+            }
+        }
+
+        function updateSearchModeAvailability() {
+            const isIndexed = indexStatus && indexStatus.indexed;
+
+            const pairs = [
+                ['smSemantic', 'cbSemantic', isIndexed],
+                ['smMetadata', 'cbMetadata', isIndexed],
+            ];
+
+            for (const [labelId, cbId, enabled] of pairs) {
+                const label = document.getElementById(labelId);
+                const cb = document.getElementById(cbId);
+                if (enabled) {
+                    label.classList.remove('disabled');
+                    cb.disabled = false;
+                } else {
+                    label.classList.add('disabled');
+                    cb.disabled = true;
+                    cb.checked = false;
+                }
+            }
+        }
+
+        // ========== Indexing Config Modal ==========
+
+        function openIndexingModal() {
+            showIndexingConfigView();
+            indexingModal.classList.add('active');
+        }
+
+        function closeIndexingModal() {
+            indexingModal.classList.remove('active');
+        }
+
+        function showIndexingConfigView() {
+            const isIndexed = indexStatus && indexStatus.indexed;
+            const statusLine = isIndexed
+                ? `Currently indexed: <strong>${indexStatus.document_count}</strong> documents` +
+                  (indexStatus.schema_name ? ` &middot; Schema: ${esc(indexStatus.schema_name)}` : '')
+                : 'No index found for this folder.';
+
+            indexingModalContent.innerHTML = `
+                <div class="modal-title">${isIndexed ? 'Re-index Folder' : 'Index Folder'}</div>
+                <div style="font-size:12px;color:var(--ink-light);margin-bottom:20px;">${statusLine}</div>
+
+                <div class="modal-section">
+                    <div class="profile-label">Schema Source</div>
+                    <div class="radio-group">
+                        <label><input type="radio" name="modalSchemaSource" value="auto" checked> Auto-discover</label>
+                        <label><input type="radio" name="modalSchemaSource" value="custom"> Custom JSON</label>
+                    </div>
+                    <div id="modalSchemaArea">
+                        <button class="panel-btn" onclick="generateSchemaForModal()" id="modalGenBtn">Generate Schema</button>
+                    </div>
+                </div>
+
+                <div class="embed-toggle-row">
+                    <input type="checkbox" id="modalEmbedToggle">
+                    <span>Generate embeddings</span>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="modal-btn secondary" onclick="closeIndexingModal()">Cancel</button>
+                    <button class="modal-btn" onclick="startIndexingFromModal()" id="modalStartBtn">Start Indexing</button>
+                </div>
+            `;
+
+            // Wire up schema source radio toggle
+            indexingModalContent.querySelectorAll('input[name="modalSchemaSource"]').forEach(r => {
+                r.addEventListener('change', () => {
+                    const area = document.getElementById('modalSchemaArea');
+                    if (r.value === 'auto' && r.checked) {
+                        area.innerHTML = '<button class="panel-btn" onclick="generateSchemaForModal()" id="modalGenBtn">Generate Schema</button>';
+                    } else if (r.value === 'custom' && r.checked) {
+                        area.innerHTML = `
+                            <div class="profile-label" style="margin-top:8px">Schema JSON</div>
+                            <div class="schema-editor">
+                                <textarea id="modalSchemaEditor">{
+  "name": "custom",
+  "fields": [
+    {"name": "document_type", "type": "string", "description": "Type of document."},
+    {"name": "mentions_currency", "type": "boolean", "description": "Contains monetary values."}
+  ]
+}</textarea>
+                            </div>
+                        `;
+                    }
+                });
+            });
+        }
+
+        async function generateSchemaForModal() {
+            const area = document.getElementById('modalSchemaArea');
+            area.innerHTML = '<span class="panel-spinner"></span> Discovering schema...';
+
+            try {
+                const res = await fetch('/api/index/auto-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ folder: currentFolder }),
+                });
+                const data = await res.json();
+                if (data.error) {
+                    area.innerHTML = `<div style="color:var(--accent);font-size:12px;margin-bottom:8px">Error: ${esc(data.error)}</div>
+                        <button class="panel-btn" onclick="generateSchemaForModal()" id="modalGenBtn">Retry</button>`;
+                    return;
+                }
+                const schemaJson = JSON.stringify(data.profile, null, 2);
+                area.innerHTML = `
+                    <div class="profile-label" style="margin-top:8px">Schema JSON (editable)</div>
+                    <div class="schema-editor">
+                        <textarea id="modalSchemaEditor">${esc(schemaJson)}</textarea>
+                    </div>
+                    <button class="panel-btn" onclick="generateSchemaForModal()" style="margin-top:8px">Regenerate</button>
+                `;
+            } catch (e) {
+                area.innerHTML = `<div style="color:var(--accent);font-size:12px;margin-bottom:8px">Error: ${esc(e.message)}</div>
+                    <button class="panel-btn" onclick="generateSchemaForModal()" id="modalGenBtn">Retry</button>`;
+            }
+        }
+
+        async function startIndexingFromModal() {
+            if (isRunning) return;
+
+            // Parse schema from editor if present
+            let metadataProfile = null;
+            let withMetadata = false;
+            const editorEl = document.getElementById('modalSchemaEditor');
+            if (editorEl) {
+                const raw = editorEl.value.trim();
+                if (raw) {
+                    try {
+                        metadataProfile = JSON.parse(raw);
+                        withMetadata = true;
+                    } catch (e) {
+                        alert('Invalid JSON in schema editor: ' + e.message);
+                        return;
+                    }
+                }
+            }
+
+            const embedEl = document.getElementById('modalEmbedToggle');
+            const withEmbeddings = embedEl ? embedEl.checked : false;
+
+            isRunning = true;
+            updateStatus('Indexing', 'active');
+            progressBar.classList.add('active');
+
+            // Show progress view in modal
+            indexingModalContent.innerHTML = `
+                <div class="modal-title">Indexing in Progress</div>
+                <div style="text-align:center;padding:40px 0;">
+                    <span class="panel-spinner" style="width:24px;height:24px;border-width:3px;"></span>
+                    <div style="margin-top:16px;font-size:13px;color:var(--ink-light);">
+                        Parsing documents and building search index...
+                    </div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/index', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        folder: currentFolder,
+                        discover_schema: true,
+                        with_metadata: withMetadata,
+                        metadata_profile: metadataProfile,
+                        with_embeddings: withEmbeddings,
+                    }),
+                });
+                const payload = await response.json();
+                if (!response.ok || payload.error) {
+                    throw new Error(payload.error || `Indexing failed (${response.status})`);
+                }
+                // Refresh status
+                await checkIndexStatus(currentFolder);
+                showIndexingSummary(payload);
+                updateStatus('Indexed', '');
+            } catch (e) {
+                indexingModalContent.innerHTML = `
+                    <div class="modal-title">Indexing Failed</div>
+                    <div style="color:var(--accent);margin-bottom:20px;font-size:13px;">${esc(e.message)}</div>
+                    <button class="modal-btn" onclick="closeIndexingModal()">Close</button>
+                `;
+                updateStatus('Error', 'error');
+            }
+            isRunning = false;
+            queryBtn.disabled = false;
+            progressBar.classList.remove('active');
+        }
+
+        function showIndexingSummary(result) {
+            indexingModalContent.innerHTML = `
+                <div class="modal-title">Indexing Complete</div>
+                <div class="indexing-summary">
+                    <dl>
+                        <dt>Documents indexed</dt>
+                        <dd>${result.indexed_files || 0}</dd>
+                        <dt>Active documents</dt>
+                        <dd>${result.active_documents || 0}</dd>
+                        <dt>Chunks written</dt>
+                        <dd>${result.chunks_written || 0}</dd>
+                        <dt>Skipped files</dt>
+                        <dd>${result.skipped_files || 0}</dd>
+                        <dt>Deleted files</dt>
+                        <dd>${result.deleted_files || 0}</dd>
+                        <dt>Schema</dt>
+                        <dd>${esc(result.schema_used || 'none')}</dd>
+                        <dt>Metadata mode</dt>
+                        <dd>${esc(result.metadata_mode || 'heuristic')}</dd>
+                        <dt>Embeddings written</dt>
+                        <dd>${result.embeddings_written || 0}</dd>
+                    </dl>
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn" onclick="closeIndexingModal()">Done</button>
+                </div>
+            `;
+        }
+
+        // ========== Start Exploration ==========
+
+        async function startExploration() {
+            const query = queryInput.value.trim();
+            if (!query || isRunning) return;
+
+            if (ws) { ws.close(); ws = null; }
+
+            isRunning = true;
+            stepCount = 0;
+            queryBtn.disabled = true;
+
+            stepsList.innerHTML = '<div class="empty-state"><div class="prompt">Processing...</div><div class="hint">Starting exploration</div></div>';
+            resultContent.innerHTML = '<div class="loading-text">Processing...</div>';
+            statsBar.style.display = 'none';
+            progressBar.classList.add('active');
+            stepCountEl.textContent = '—';
+
+            const enableSemantic = document.getElementById('cbSemantic').checked;
+            const enableMetadata = document.getElementById('cbMetadata').checked;
+            const useIndex = (enableSemantic || enableMetadata) && indexStatus && indexStatus.indexed;
+            updateStatus('Connecting', 'active');
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${wsProtocol}://${window.location.host}/ws/explore`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                updateStatus('Executing', 'active');
+                ws.send(JSON.stringify({
+                    task: query,
+                    folder: currentFolder,
+                    use_index: useIndex,
+                    enable_semantic: enableSemantic,
+                    enable_metadata: enableMetadata,
+                }));
+            };
+
+            ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
+            ws.onerror = () => {
+                showError('Connection failed. Is the server running?');
+                finish();
+            };
+            ws.onclose = () => finish();
+        }
+
+        // Handle message
+        function handleMessage(msg) {
+            switch (msg.type) {
+                case 'tool_call':
+                    addStep(msg.data);
+                    break;
+                case 'go_deeper':
+                    addNavStep(msg.data);
+                    break;
+                case 'ask_human':
+                    showHumanModal(msg.data);
+                    break;
+                case 'complete':
+                    showResult(msg.data);
+                    break;
+                case 'error':
+                    showError(msg.data.message);
+                    break;
+            }
+        }
+
+        // Add step
+        function addStep(data) {
+            if (data.step === 1 && stepsList.querySelector('.empty-state')) {
+                stepsList.innerHTML = '';
+            }
+
+            stepCount = data.step;
+            stepCountEl.textContent = `${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`;
+
+            const style = toolStyles[data.tool_name] || 'preview';
+            const target = data.tool_input.directory || data.tool_input.file_path || '';
+
+            const html = `
+                <div class="step ${style}">
+                    <div class="step-header">
+                        <span class="step-id">#${data.step}</span>
+                        <span class="step-tool">${data.tool_name}</span>
+                    </div>
+                    ${target ? `<div class="step-target">${esc(target)}</div>` : ''}
+                    <div class="step-reason">${esc(data.reason)}</div>
+                </div>
+            `;
+            stepsList.insertAdjacentHTML('beforeend', html);
+            stepsList.scrollTop = stepsList.scrollHeight;
+        }
+
+        // Add nav step
+        function addNavStep(data) {
+            if (data.step === 1 && stepsList.querySelector('.empty-state')) {
+                stepsList.innerHTML = '';
+            }
+
+            stepCount = data.step;
+            stepCountEl.textContent = `${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`;
+
+            const html = `
+                <div class="step navigate">
+                    <div class="step-header">
+                        <span class="step-id">#${data.step}</span>
+                        <span class="step-tool">navigate</span>
+                    </div>
+                    <div class="step-target">${esc(data.directory)}</div>
+                    <div class="step-reason">${esc(data.reason)}</div>
+                </div>
+            `;
+            stepsList.insertAdjacentHTML('beforeend', html);
+            stepsList.scrollTop = stepsList.scrollHeight;
+        }
+
+        // Show human modal
+        function showHumanModal(data) {
+            document.getElementById('modalQuestion').textContent = data.question;
+            document.getElementById('modalInput').value = '';
+            humanModal.classList.add('active');
+            updateStatus('Awaiting input', 'active');
+        }
+
+        // Submit human response
+        function submitHumanResponse() {
+            const response = document.getElementById('modalInput').value.trim();
+            if (!response) return;
+            humanModal.classList.remove('active');
+            ws.send(JSON.stringify({ type: 'human_response', response }));
+            updateStatus('Executing', 'active');
+        }
+
+        // Show result
+        function showResult(data) {
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            let text = data.final_result || 'No result';
+            text = text.replace(/\[Source:[^\]]+\]/g, m => `<span class="citation">${esc(m)}</span>`);
+
+            resultContent.innerHTML = `<div class="result-text">${text}</div>`;
+
+            const s = data.stats;
+            if (s) {
+                statsBar.style.display = 'grid';
+                document.getElementById('statSteps').textContent = s.steps;
+                document.getElementById('statScanned').textContent = s.documents_scanned;
+                document.getElementById('statParsed').textContent = s.documents_parsed;
+                document.getElementById('statCalls').textContent = s.api_calls;
+                document.getElementById('statTokens').textContent = formatNum(s.total_tokens);
+                document.getElementById('statCost').textContent = '$' + s.estimated_cost.toFixed(4);
+            }
+
+            updateStatus('Complete', '');
+        }
+
+        // Show error
+        function showError(msg) {
+            resultContent.innerHTML = `<div class="empty-state"><div class="prompt">Error</div><div class="hint">${esc(msg)}</div></div>`;
+            updateStatus('Error', 'error');
+        }
+
+        // Finish
+        function finish() {
+            isRunning = false;
+            queryBtn.disabled = false;
+            progressBar.classList.remove('active');
+            if (ws) { ws.close(); ws = null; }
+        }
+
+        // Update status
+        function updateStatus(text, state) {
+            statusText.textContent = text;
+            statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+        }
+
+        // Escape HTML
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // Format number
+        function formatNum(n) {
+            if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+            return n;
+        }
+
+        // ========== Folder Picker ==========
+
+        async function openFolderPicker() {
+            folderModal.classList.add('active');
+            browsingPath = currentFolder;
+            await loadFolders(browsingPath);
+        }
+
+        function closeFolderPicker() {
+            folderModal.classList.remove('active');
+        }
+
+        async function loadFolders(path) {
+            folderList.innerHTML = '<div class="loading-text">Loading...</div>';
+            try {
+                const res = await fetch(`/api/folders?path=${encodeURIComponent(path)}`);
+                const data = await res.json();
+
+                if (data.error) {
+                    folderList.innerHTML = `<div class="folder-empty">${esc(data.error)}</div>`;
+                    return;
+                }
+
+                browsingPath = data.current;
+                folderModalPath.textContent = data.current;
+                folderUpBtn.disabled = !data.parent;
+
+                if (data.folders.length === 0) {
+                    folderList.innerHTML = `
+                        <div class="folder-empty">No subfolders</div>
+                        <div class="folder-info" style="text-align:center">${data.files_count} file(s) in this folder</div>
+                    `;
+                } else {
+                    folderList.innerHTML = data.folders.map(name => `
+                        <div class="folder-item" onclick="navigateToFolder('${esc(name)}')">
+                            <span class="folder-icon">▸</span>
+                            <span class="folder-name">${esc(name)}</span>
+                        </div>
+                    `).join('');
+                    folderList.innerHTML += `<div class="folder-info">${data.files_count} file(s) in this folder</div>`;
+                }
+            } catch (e) {
+                folderList.innerHTML = `<div class="folder-empty">Error: ${esc(e.message)}</div>`;
+            }
+        }
+
+        async function navigateToFolder(name) {
+            const newPath = browsingPath === '.' ? name : `${browsingPath}/${name}`;
+            await loadFolders(newPath);
+        }
+
+        async function navigateUp() {
+            const res = await fetch(`/api/folders?path=${encodeURIComponent(browsingPath)}`);
+            const data = await res.json();
+            if (data.parent) {
+                await loadFolders(data.parent);
+            }
+        }
+
+        function selectCurrentFolder() {
+            currentFolder = browsingPath;
+            currentPathEl.textContent = currentFolder;
+            closeFolderPicker();
+            checkIndexStatus(currentFolder);
+        }
+
+        // Initialize with current directory
+        (async function init() {
+            try {
+                const res = await fetch('/api/folders?path=.');
+                const data = await res.json();
+                if (data.current) {
+                    currentFolder = data.current;
+                    currentPathEl.textContent = currentFolder;
+                }
+            } catch (e) {
+                console.error('Failed to get initial folder:', e);
+            }
+            checkIndexStatus(currentFolder);
+        })();
+    </script>
+</body>
+</html>

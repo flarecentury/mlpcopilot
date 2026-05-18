@@ -1,0 +1,115 @@
+{
+  "api_version": "1.0",
+  "deepmd_version": "3.1.3",
+  "train": {
+    "command": "bash wrappers/dp_apptainer.sh",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "SSHContext",
+      "local_root": "./",
+      "remote_root": "/scratch/mlp/dpgen/train",
+      "remote_profile": {
+        "hostname": "hpc-login.internal",
+        "username": "mlp-user",
+        "port": 22,
+        "look_for_keys": true,
+        "timeout": 10,
+        "tar_compress": true
+      },
+      "clean_asynchronously": false
+    },
+    "resources": {
+      "batch_type": "Shell",
+      "number_node": 1,
+      "cpu_per_node": 8,
+      "gpu_per_node": 0,
+      "group_size": 1,
+      "para_deg": 1,
+      "source_list": [
+        "/scratch/mlp/envs/apptainer_env.sh"
+      ],
+      "envs": {},
+      "wait_time": 30
+    },
+    "user_forward_files": [
+      "wrappers/dp_apptainer.sh"
+    ],
+    "user_backward_files": []
+  },
+  "model_devi": {
+    "command": "bash wrappers/lmp_apptainer.sh",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "SSHContext",
+      "local_root": "./",
+      "remote_root": "/scratch/mlp/dpgen/model_devi",
+      "remote_profile": {
+        "hostname": "hpc-login.internal",
+        "username": "mlp-user",
+        "port": 22,
+        "look_for_keys": true,
+        "timeout": 10,
+        "tar_compress": true
+      },
+      "clean_asynchronously": false
+    },
+    "resources": {
+      "batch_type": "Shell",
+      "number_node": 1,
+      "cpu_per_node": 8,
+      "gpu_per_node": 0,
+      "group_size": 8,
+      "para_deg": 1,
+      "source_list": [
+        "/scratch/mlp/envs/apptainer_env.sh"
+      ],
+      "envs": {},
+      "wait_time": 30
+    },
+    "user_forward_files": [
+      "wrappers/lmp_apptainer.sh"
+    ],
+    "user_backward_files": [
+      "model_devi.out"
+    ]
+  },
+  "fp": {
+    "command": "bash wrappers/cp2k_apptainer.sh -i input.inp -o output.out",
+    "machine": {
+      "batch_type": "Shell",
+      "context_type": "SSHContext",
+      "local_root": "./",
+      "remote_root": "/scratch/mlp/dpgen/fp",
+      "remote_profile": {
+        "hostname": "hpc-login.internal",
+        "username": "mlp-user",
+        "port": 22,
+        "look_for_keys": true,
+        "timeout": 10,
+        "tar_compress": true
+      },
+      "clean_asynchronously": false
+    },
+    "resources": {
+      "batch_type": "Shell",
+      "number_node": 1,
+      "cpu_per_node": 32,
+      "gpu_per_node": 0,
+      "group_size": 1,
+      "para_deg": 1,
+      "source_list": [
+        "/scratch/mlp/envs/apptainer_env.sh"
+      ],
+      "envs": {
+        "OMP_NUM_THREADS": "1"
+      },
+      "wait_time": 30
+    },
+    "user_forward_files": [
+      "wrappers/cp2k_apptainer.sh"
+    ],
+    "user_backward_files": [
+      "output.out"
+    ]
+  }
+}

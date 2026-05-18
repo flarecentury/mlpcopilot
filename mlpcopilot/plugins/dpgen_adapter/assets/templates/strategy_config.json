@@ -1,0 +1,8 @@
+{
+  "backend": "dpgen",
+  "model_count": 4,
+  "trust_thresholds": {},
+  "fp_task_limits": {},
+  "exploration_schedule": []
+}
+

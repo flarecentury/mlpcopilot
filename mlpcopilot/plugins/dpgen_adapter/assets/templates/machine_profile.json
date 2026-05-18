@@ -1,0 +1,8 @@
+{
+  "backend": "dpgen",
+  "train": {},
+  "model_devi": {},
+  "fp": {},
+  "secret_refs": {}
+}
+

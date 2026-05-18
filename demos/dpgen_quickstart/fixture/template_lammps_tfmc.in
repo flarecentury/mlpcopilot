@@ -1,0 +1,9 @@
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       conf.lmp
+pair_style      deepmd graph.000.pb graph.001.pb graph.002.pb graph.003.pb out_file model_devi.out
+pair_coeff      * *
+timestep        0.001
+thermo          10
+run             100
