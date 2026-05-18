@@ -1,3 +1,15 @@
+<p align="center">
+  <strong>MLP Copilot</strong><br>
+  Evidence-oriented agent runtime for machine-learning-potential workflows
+</p>
+
+<p align="center">
+  <a href="./README.md">English</a> |
+  <a href="./README.zh-CN.md">中文</a> |
+  <a href="./README.fr.md">Français</a> |
+  <a href="./README.ja.md">日本語</a>
+</p>
+
 # MLP Copilot
 
 MLP Copilot is a vertical agent runtime for machine-learning-potential work. It
@@ -10,65 +22,81 @@ The current product focus is DeepMD-kit / DP-GEN active-learning operations:
 workspace initialization, configuration checks, run-state projection, artifact
 tracking, log inspection, and human-approved control actions.
 
-## Architecture
+## What It Provides
 
-MLP Copilot is split into two layers:
-
-| Layer | Responsibility |
+| Area | Capability |
 | --- | --- |
 | Runtime host | Agent loop, sessions, memory, TUI, Telegram/API gateways, MCP client, workspace, approvals, artifact index |
-| MCP / skill plugins | DP-GEN control, dataset validation, model evaluation, coverage analysis, reporting, domain workflows |
+| MLP plugins | DP-GEN control, dataset validation, model evaluation, reporting, local document search |
+| Evidence model | Run manifests, artifact hashes, approval decisions, tool logs, status projections |
+| Human control | Blocking approvals for high-cost or destructive actions |
 
-The runtime must stay at the host layer. Scientific algorithms, DP-GEN semantics,
-benchmark execution, checkpoint inference, and dataset validation logic belong in
-MCP servers or skills, not in the core runtime.
+The runtime must stay at the host layer. Scientific algorithms, DP-GEN
+semantics, checkpoint inference, benchmark execution, and dataset-validation
+logic belong in MCP servers or skills, not in core runtime code.
 
-## Current Status
+## Requirements
 
-Implemented runtime capabilities:
+- Git with access to the private repository.
+- SSH key added to GitHub for the `flarecentury/mlpcopilot` repository.
+- Python 3.11 or newer.
+- `uv` for dependency management.
 
-- `runtimeProfile = "mlpcopilot"` config policy and defaults.
-- MLP workspace initializer, defaulting to `~/.mlpcopilot/workspace`.
-- Modular terminal workbench available through `mlpcopilot tui`.
-- ApprovalManager with persistent approval decisions.
-- ArtifactIndex and run manifest support.
-- OpenAI-compatible API approval handlers.
-- Shared runtime slash-command registry for the TUI and gateways.
-- Runtime-level DP-GEN status projection through
-  `mlpcopilot.plugins.dpgen_adapter`.
+Install `uv` if needed:
 
-Implemented plugin capabilities:
+```bash
+python -m pip install --user uv
+```
 
-- `mlpcopilot/mcps/mlp_training_controller_mcp`.
-- DP-GEN backend provider for training-controller tools.
-- Runtime-approved `run`, `stop`, and `rewind` controls when called through the
-  agent.
-- `mlp-active-learning` skill.
-- `dpgen-machine-writer` skill with Apptainer/SIF examples and wrappers.
-- Bundled `agentic-file-search` MCP package for local document search.
+Check GitHub SSH access:
 
-Planned plugin capabilities:
+```bash
+ssh -T git@github.com
+```
 
-- Dataset validation MCP and skill.
-- Model / checkpoint evaluation MCP.
-- Coverage MCP.
-- Job and report MCP servers.
+## Install From Source
 
-## Quick Start
+Clone the private repository:
 
-Install from the current checkout:
+```bash
+git clone git@github.com:flarecentury/mlpcopilot.git
+cd mlpcopilot
+```
+
+Install runtime and development dependencies:
 
 ```bash
 uv sync --extra dev
 ```
 
-Initialize the default profile and workspace:
+Verify the CLI:
+
+```bash
+uv run mlpcopilot --help
+uv run mlpcopilot mlp capabilities
+```
+
+## First Run
+
+Create or update the local config and default workspace:
 
 ```bash
 uv run mlpcopilot onboard
 ```
 
-Open the local workbench:
+The default workspace is:
+
+```text
+~/.mlpcopilot/workspace
+```
+
+You can also initialize a workspace directly:
+
+```bash
+uv run mlpcopilot mlp init --workspace ~/.mlpcopilot/workspace
+```
+
+Open the local terminal workbench:
 
 ```bash
 uv run mlpcopilot tui
@@ -88,7 +116,9 @@ uv run mlpcopilot tui \
   --workspace ~/.mlpcopilot/workspace
 ```
 
-Project an existing DP-GEN working directory into the TUI workspace:
+## Work With An Existing DP-GEN Directory
+
+Project an existing DP-GEN working directory into the MLP Copilot workspace:
 
 ```bash
 bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir --no-tui
@@ -102,10 +132,9 @@ uv run mlpcopilot tui --config ~/.mlpcopilot/config.json --session tui:local
 
 ## Common Commands
 
-Runtime commands:
+Runtime status and workspace commands:
 
 ```bash
-uv run mlpcopilot mlp init --workspace ~/.mlpcopilot/workspace
 uv run mlpcopilot mlp status
 uv run mlpcopilot mlp capabilities
 uv run mlpcopilot mlp approvals
@@ -127,13 +156,20 @@ OpenAI-compatible API:
 uv run mlpcopilot serve
 ```
 
-Gateway:
+Telegram gateway:
 
 ```bash
 uv run mlpcopilot gateway
 ```
 
-## Product And Implementation Sources
+Update an existing checkout:
+
+```bash
+git pull --ff-only
+uv sync --extra dev
+```
+
+## Project Documents
 
 Before changing product behavior or implementation, start with:
 
@@ -147,9 +183,7 @@ Operational and implementation docs live under [`docs/`](./docs/README.md).
 Documentation update and review rules live in
 [`docs/MAINTENANCE.md`](./docs/MAINTENANCE.md).
 
-## Development
-
-Run focused checks:
+## Development Checks
 
 ```bash
 uv run --extra dev ruff check mlpcopilot tests
@@ -160,15 +194,12 @@ The codebase may still contain inherited general-purpose capabilities. For MLP
 Copilot work, keep changes scoped to the current PRD and preserve the
 runtime/plugin boundary.
 
-## License And Notices
+## License And Acknowledgements
 
 MLP Copilot is released under the MIT License. See [`LICENSE`](./LICENSE).
-
 Third-party component notices are listed in
 [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md). Security guidance is in
 [`SECURITY.md`](./SECURITY.md).
-
-## Acknowledgements
 
 MLP Copilot builds on and adapts work from the following projects and products:
 
