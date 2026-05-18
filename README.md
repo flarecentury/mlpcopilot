@@ -1,13 +1,14 @@
 # MLP Copilot
 
 MLP Copilot is a vertical agent runtime for machine-learning-potential work. It
-originated from the general-purpose [`HKUDS/nanobot`](https://github.com/HKUDS/nanobot)
-agent runtime and is narrowed toward local and remote scientific workflows where
-evidence, artifacts, and human approvals matter.
+originated from the general-purpose
+[`HKUDS/nanobot`](https://github.com/HKUDS/nanobot) agent runtime and is now
+narrowed toward local and remote scientific workflows where evidence, artifacts,
+human approvals, and traceable decisions matter.
 
-The current product focus is DeepMD-kit / DP-GEN active-learning operation:
-workspace setup, configuration review, run status projection, artifact tracking,
-log inspection, and approval-gated control actions.
+The current product focus is DeepMD-kit / DP-GEN active-learning operations:
+workspace initialization, configuration checks, run-state projection, artifact
+tracking, log inspection, and human-approved control actions.
 
 ## Architecture
 
@@ -15,45 +16,47 @@ MLP Copilot is split into two layers:
 
 | Layer | Responsibility |
 | --- | --- |
-| Runtime host | agent loop, session, memory, TUI, Telegram/API gateway, MCP client, workspace, approvals, artifact index |
-| MCP / skill plugins | DP-GEN control, dataset validation, model evaluation, coverage analysis, reports, domain workflows |
+| Runtime host | Agent loop, sessions, memory, TUI, Telegram/API gateways, MCP client, workspace, approvals, artifact index |
+| MCP / skill plugins | DP-GEN control, dataset validation, model evaluation, coverage analysis, reporting, domain workflows |
 
-The runtime must stay a host. Scientific algorithms, DP-GEN semantics, benchmark
-execution, checkpoint inference, and dataset validation logic belong in MCP
-servers or skills.
+The runtime must stay at the host layer. Scientific algorithms, DP-GEN semantics,
+benchmark execution, checkpoint inference, and dataset validation logic belong in
+MCP servers or skills, not in the core runtime.
 
 ## Current Status
 
-Implemented runtime pieces:
+Implemented runtime capabilities:
 
-- `runtimeProfile = "mlpcopilot"` policy and defaults.
-- MLP workspace initializer under `~/.mlpcopilot/workspace` by default.
-- Modular terminal workbench via `mlpcopilot tui`.
-- ApprovalManager and persisted approval decisions.
+- `runtimeProfile = "mlpcopilot"` config policy and defaults.
+- MLP workspace initializer, defaulting to `~/.mlpcopilot/workspace`.
+- Modular terminal workbench available through `mlpcopilot tui`.
+- ApprovalManager with persistent approval decisions.
 - ArtifactIndex and run manifest support.
 - OpenAI-compatible API approval handlers.
-- Runtime slash command registry shared by TUI and gateway.
-- Runtime-only DP-GEN adapter projection through `mlpcopilot.plugins.dpgen_adapter`.
+- Shared runtime slash-command registry for the TUI and gateways.
+- Runtime-level DP-GEN status projection through
+  `mlpcopilot.plugins.dpgen_adapter`.
 
-Implemented plugin pieces:
+Implemented plugin capabilities:
 
-- `mlpcopilot/mcps/mlp_training_controller_mcp`
+- `mlpcopilot/mcps/mlp_training_controller_mcp`.
 - DP-GEN backend provider for training-controller tools.
-- Run/stop/rewind control tools gated by runtime approval when called through the agent.
+- Runtime-approved `run`, `stop`, and `rewind` controls when called through the
+  agent.
 - `mlp-active-learning` skill.
 - `dpgen-machine-writer` skill with Apptainer/SIF examples and wrappers.
-- `agentic-file-search` MCP package for local document search.
+- Bundled `agentic-file-search` MCP package for local document search.
 
-Planned plugin pieces:
+Planned plugin capabilities:
 
-- dataset validation MCP and skill
-- model/checkpoint evaluation MCP
-- coverage MCP
-- job/report MCPs
+- Dataset validation MCP and skill.
+- Model / checkpoint evaluation MCP.
+- Coverage MCP.
+- Job and report MCP servers.
 
 ## Quick Start
 
-Install from this checkout:
+Install from the current checkout:
 
 ```bash
 uv sync --extra dev
@@ -77,7 +80,7 @@ Render a one-shot TUI snapshot:
 uv run mlpcopilot tui --once
 ```
 
-Use a specific config/workspace:
+Use an explicit config and workspace:
 
 ```bash
 uv run mlpcopilot tui \
@@ -85,7 +88,7 @@ uv run mlpcopilot tui \
   --workspace ~/.mlpcopilot/workspace
 ```
 
-Project an existing DP-GEN work directory into the TUI workspace:
+Project an existing DP-GEN working directory into the TUI workspace:
 
 ```bash
 bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir --no-tui
@@ -97,7 +100,7 @@ Then open the workbench:
 uv run mlpcopilot tui --config ~/.mlpcopilot/config.json --session tui:local
 ```
 
-## Important Commands
+## Common Commands
 
 Runtime commands:
 
@@ -130,9 +133,9 @@ Gateway:
 uv run mlpcopilot gateway
 ```
 
-## Source Of Truth
+## Product And Implementation Sources
 
-Read these first when changing the product:
+Before changing product behavior or implementation, start with:
 
 1. [`AGENTS.md`](./AGENTS.md)
 2. [`PROJECT.md`](./PROJECT.md)
@@ -140,8 +143,9 @@ Read these first when changing the product:
 4. [`prd/MLPCOPILOT_MCP_SKILL_PRD.md`](./prd/MLPCOPILOT_MCP_SKILL_PRD.md)
 5. [`prd/MLPCOPILOT_TUI_CODEX_INTERACTION_PRD.md`](./prd/MLPCOPILOT_TUI_CODEX_INTERACTION_PRD.md)
 
-Operational and implementation-facing docs live under [`docs/`](./docs/README.md),
-with update and review rules in [`docs/MAINTENANCE.md`](./docs/MAINTENANCE.md).
+Operational and implementation docs live under [`docs/`](./docs/README.md).
+Documentation update and review rules live in
+[`docs/MAINTENANCE.md`](./docs/MAINTENANCE.md).
 
 ## Development
 
@@ -152,22 +156,27 @@ uv run --extra dev ruff check mlpcopilot tests
 uv run --extra dev pytest -q
 ```
 
-The codebase may contain inherited upstream capabilities. For MLP Copilot work,
-keep changes scoped to the active PRD and preserve the runtime/plugin boundary.
+The codebase may still contain inherited general-purpose capabilities. For MLP
+Copilot work, keep changes scoped to the current PRD and preserve the
+runtime/plugin boundary.
 
 ## License And Notices
 
 MLP Copilot is released under the MIT License. See [`LICENSE`](./LICENSE).
 
-See [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) for bundled third-party
-notices. Security guidance is in [`SECURITY.md`](./SECURITY.md).
+Third-party component notices are listed in
+[`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md). Security guidance is in
+[`SECURITY.md`](./SECURITY.md).
 
 ## Acknowledgements
 
-MLP Copilot builds on and adapts work from:
+MLP Copilot builds on and adapts work from the following projects and products:
 
 - [`HKUDS/nanobot`](https://github.com/HKUDS/nanobot), the MIT-licensed
   general-purpose agent runtime that provided the original runtime foundation.
 - [`PromtEngineer/agentic-file-search`](https://github.com/PromtEngineer/agentic-file-search),
   the MIT-licensed document-search project adapted as the bundled
   `agentic-file-search` MCP package.
+- [OpenAI Codex](https://openai.com/codex), whose developer-workflow
+  interaction design influenced MLP Copilot's TUI, command entrypoints,
+  tool-call visibility, and human approval experience.

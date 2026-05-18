@@ -29,9 +29,9 @@ The knowledge root, database path, model, and refresh policy are configured on t
 
 ## Examples
 
-- User: `用agentic-file-search 看看数据库情况`
+- User: `Use agentic-file-search to check the database status`
   - Tool: `mcp_agentic-file-search_agentic_explore(task="check database status, list knowledge-base files, indexed documents, and whether the index is stale")`
-- User: `去知识库看看 natfrp 的信息`
+- User: `Look in the knowledge base for natfrp information`
   - Tool: `mcp_agentic-file-search_agentic_explore(task="find natfrp information in the knowledge base and summarize the relevant source files")`
-- User: `具体安装步骤？`
+- User: `What are the concrete installation steps?`
   - Tool: `mcp_agentic-file-search_agentic_explore(task="from the previously identified natfrp source file, extract concrete installation steps, prerequisites, config files, service actions, and risks")`

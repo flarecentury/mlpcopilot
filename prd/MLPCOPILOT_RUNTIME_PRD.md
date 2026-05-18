@@ -1,91 +1,111 @@
 # PRD: MLP Copilot Runtime
 
-## 1. 产品定位
+## 1. Product Positioning
 
-**MLP Copilot Runtime** 是从 mlpcopilot 直接产品化改造的垂直场景宿主运行时，面向机器学习势训练与验证工作流。
+**MLP Copilot Runtime** is the vertical host runtime adapted from `mlpcopilot`
+for machine-learning-potential training and validation workflows.
 
-本 PRD 只定义 mlpcopilot 运行时本身的魔改范围。MCP server 和 skill pack 是插件能力，放到独立 PRD 中定义。
+This PRD defines only the runtime modification scope. MCP servers and skill
+packs are plugin capabilities and are defined in separate PRDs.
 
-核心判断：
+Core decisions:
 
-- 先做一个适合 MLP 场景的稳定宿主。
-- 宿主只负责对话、会话、审批、界面、插件接入和证据索引。
-- 科学计算、数据校验、模型推理、验证方法论不写进 mlpcopilot core。
+- Build a stable host for MLP workflows first.
+- The host owns conversation, sessions, approvals, UI, plugin integration, and
+  evidence indexing.
+- Scientific computation, dataset validation, model inference, and validation
+  methodology do not belong in `mlpcopilot` core.
 
-## 2. 背景
+## 2. Background
 
-原始 mlpcopilot 是通用 agent runtime，包含多通道 gateway、MCP 接入、memory、skills、OpenAI-compatible API、CLI 和大量默认工具。对 MLP 训练与验证场景来说，它的能力基础够用，但默认行为太宽：
+The original `mlpcopilot` is a general-purpose agent runtime with multiple
+gateways, MCP integration, memory, skills, an OpenAI-compatible API, a CLI, and
+many default tools. That foundation is useful for MLP training and validation,
+but the default behavior is too broad:
 
-- 通道过多，部署和安全面过大。
-- 默认工具包含 web、spawn、notebook 等非必要能力。
-- 缺少科学工作流需要的 approval、artifact、run manifest 和 TUI 工作台。
-- 缺少面向插件能力的明确边界。
+- Too many channels increase deployment and security surface area.
+- Default tools include web, spawn, notebook, and other capabilities that are
+  not required for the first MLP runtime.
+- Scientific workflows need approvals, artifacts, run manifests, and a TUI
+  workbench.
+- Plugin capability boundaries need to be explicit.
 
-MLP Copilot Runtime 的目标不是把 mlpcopilot 改造成科学计算平台，而是把它收敛成一个可靠的垂直宿主。
+MLP Copilot Runtime is not intended to turn `mlpcopilot` into a scientific
+computing platform. It narrows the runtime into a reliable vertical host.
 
-## 3. 目标场景
+## 3. Target Scenario
 
-首个场景：**MLP checkpoint 验证与数据质量审查的本地/远程操作台**。
+The first scenario is a **local and remote workbench for MLP checkpoint
+validation and data-quality review**.
 
-典型用户通过 TUI 或 Telegram 与 agent 交互：
+A typical user interacts with the agent through the TUI or Telegram:
 
-1. 指定 workspace。
-2. 接入一个或多个 MCP server。
-3. 加载 MLP 项目上下文。
-4. 让 agent 根据 skill 流程调用 MCP 工具。
-5. 查看 tool log、artifact、approval。
-6. 对高成本任务、模型 readiness、长期记忆更新做人工审批。
+1. Select a workspace.
+2. Connect one or more MCP servers.
+3. Load MLP project context.
+4. Let the agent call MCP tools according to skill workflows.
+5. Inspect tool logs, artifacts, and approvals.
+6. Approve high-cost tasks, model-readiness decisions, and long-term memory
+   updates.
 
-## 4. 用户
+## 4. Users
 
-主要用户：
+Primary users:
 
-- 机器学习势开发者。
-- 计算材料研究人员。
-- 运行数据清洗、模型评估、主动学习和验证任务的工程/科研人员。
+- Machine-learning-potential developers.
+- Computational materials researchers.
+- Engineering and research users running data cleaning, model evaluation, active
+  learning, and validation tasks.
 
-次要用户：
+Secondary users:
 
-- 远程审批者。
-- 需要用 OpenAI-compatible API 接入该 agent 的自动化系统。
+- Remote approvers.
+- Automation systems that need to call the agent through an OpenAI-compatible
+  API.
 
-## 5. 产品目标
+## 5. Product Goals
 
-1. 将 mlpcopilot 收敛为 MLP 场景的最小可信宿主。
-2. 默认只保留 Telegram gateway，减少无关通道和安全面。
-3. 增加本地 TUI，作为主要工作台。
-4. 增加通用 ApprovalManager，支撑 human-in-the-loop。
-5. 增加 ArtifactIndex，记录 run、manifest、report、decision。
-6. 保留 MCP client，并明确支持本地和远程 MCP 插件。
-7. 保留 skill 发现机制，但 skill 内容由插件包提供。
-8. 保留 OpenAI-compatible API，便于外部系统集成。
+1. Narrow `mlpcopilot` into the minimum trusted host for MLP workflows.
+2. Keep Telegram as the only default remote gateway to reduce unrelated channel
+   surface area.
+3. Add a local TUI as the main workbench.
+4. Add a general ApprovalManager for real human-in-the-loop workflows.
+5. Add an ArtifactIndex for runs, manifests, reports, and decisions.
+6. Keep the MCP client and explicitly support local and remote MCP plugins.
+7. Keep skill discovery, while sourcing MLP skill content from plugin packages.
+8. Keep the OpenAI-compatible API for external integration.
 
-## 6. 非目标
+## 6. Non-Goals
 
-1. 不实现 MLP 数据校验算法。
-2. 不实现模型推理、benchmark、job submit。
-3. 不内置 validation planning 方法论。
-4. 不把 MCP server 代码写进 mlpcopilot core。
-5. 不把 skill 内容写死到主 prompt。
-6. 不保留所有社交通道。
-7. 不默认启用 unrestricted shell。
-8. 不建设重型 Web 平台作为首版主界面。
+1. Do not implement MLP dataset-validation algorithms.
+2. Do not implement model inference, benchmarks, or job submission.
+3. Do not embed validation-planning methodology in the runtime.
+4. Do not place MCP server code in `mlpcopilot` core.
+5. Do not hard-code skill content into the main prompt.
+6. Do not keep every social channel enabled by default.
+7. Do not enable unrestricted shell by default.
+8. Do not build a heavy web platform as the first UI.
 
-## 7. 模块边界
+## 7. Module Boundaries
 
-| 层 | 本 PRD 是否覆盖 | 职责 |
+| Layer | Covered by this PRD | Responsibility |
 |---|---|---|
-| MLP Copilot runtime | 是 | agent loop、session、memory、TUI、Telegram、API、approval、artifact、plugin registry |
-| MCP server | 否 | 数据校验、模型推理、验证执行、报告生成 |
-| Skill pack | 否 | 方法论、操作流程、领域判断框架 |
+| MLP Copilot runtime | Yes | Agent loop, sessions, memory, TUI, Telegram, API, approvals, artifacts, plugin registry |
+| MCP server | No | Dataset validation, model inference, validation execution, report generation |
+| Skill pack | No | Methodology, operating workflow, domain-decision framework |
 
-Runtime 只知道“有工具、有 skill、有 artifact、有审批”，不理解具体科学算法。
+The runtime only knows that tools, skills, artifacts, and approvals exist. It
+does not understand specific scientific algorithms.
 
-DP-GEN 相关适配器（例如 `mlpcopilot.plugins.dpgen_adapter`）属于 plugin 层。Runtime 可以展示其投影出的 artifact、run manifest 和 display document，但不解析 `record.dpgen`、`iter.*` 或其他 DP-GEN 科学/调度语义。
+DP-GEN-related adapters, such as `mlpcopilot.plugins.dpgen_adapter`, belong to
+the plugin layer. The runtime may display projected artifacts, run manifests,
+and display documents from such adapters, but it must not parse `record.dpgen`,
+`iter.*`, or other DP-GEN scientific or scheduling semantics in core runtime
+logic.
 
-## 8. 保留的 mlpcopilot 能力
+## 8. Retained `mlpcopilot` Capabilities
 
-保留：
+Retain:
 
 - `AgentLoop`
 - `ContextBuilder`
@@ -93,13 +113,13 @@ DP-GEN 相关适配器（例如 `mlpcopilot.plugins.dpgen_adapter`）属于 plug
 - `MemoryStore`
 - `ToolRegistry`
 - `providers`
-- `MCP client`
+- MCP client
 - `bus`
 - `config`
-- `telegram channel`
-- `OpenAI-compatible API`
+- Telegram channel
+- OpenAI-compatible API
 
-继续支持：
+Continue supporting:
 
 - `mlpcopilot serve`
 - `mlpcopilot agent`
@@ -108,22 +128,23 @@ DP-GEN 相关适配器（例如 `mlpcopilot.plugins.dpgen_adapter`）属于 plug
 - MCP `streamableHttp`
 - workspace skills
 
-## 9. 默认禁用能力
+## 9. Capabilities Disabled By Default
 
-在 `mlpcopilot` profile 下默认禁用：
+Under the `mlpcopilot` profile, disable the following by default:
 
-- Slack、Discord、Feishu、WeChat、WeCom、WhatsApp、Matrix、Email、QQ、DingTalk、MSTeams。
-- WebUI / WebSocket，除非开发模式显式启用。
-- `web_search` 和 `web_fetch`。
-- unrestricted `exec`。
-- generic `spawn`。
-- `notebook_edit`。
-- 非必要内置 skills。
-- cron 类非科学提醒。
+- Slack, Discord, Feishu, WeChat, WeCom, WhatsApp, Matrix, Email, QQ, DingTalk,
+  and MSTeams.
+- WebUI / WebSocket, unless explicitly enabled in development mode.
+- `web_search` and `web_fetch`.
+- Unrestricted `exec`.
+- Generic `spawn`.
+- `notebook_edit`.
+- Nonessential built-in skills.
+- Cron-style non-scientific reminders.
 
 ## 10. Runtime Profile
 
-新增：
+Add:
 
 ```json
 {
@@ -131,22 +152,22 @@ DP-GEN 相关适配器（例如 `mlpcopilot.plugins.dpgen_adapter`）属于 plug
 }
 ```
 
-行为：
+Behavior:
 
-| 项 | 行为 |
+| Item | Behavior |
 |---|---|
-| Channels | 默认只加载 Telegram、CLI、API |
-| Tools | 默认最小工具集 |
-| MCP | 可连接本地或远程 MCP server |
-| Skills | 只加载 workspace 中启用的 skills |
-| Exec | 默认开启，必须 审批 + allowlist。 |
-| Web | 默认关闭 |
-| Workspace | 强制初始化 MLP Copilot schema |
-| Approval | gated action 必须审批 |
+| Channels | Load only Telegram, CLI, and API by default |
+| Tools | Use a minimal default tool set |
+| MCP | Connect to local or remote MCP servers |
+| Skills | Load only enabled workspace skills |
+| Exec | Enabled only with approvals and allowlist policy |
+| Web | Disabled by default |
+| Workspace | Initialize the MLP Copilot schema |
+| Approval | Gated actions require approval |
 
 ## 11. Workspace Schema
 
-默认 workspace：
+Default workspace:
 
 ```text
 workspace/
@@ -170,23 +191,25 @@ workspace/
 └── skills/
 ```
 
-Runtime 只创建目录和基础模板，不生成科学验证内容。
+The runtime creates directories and baseline templates only. It does not
+generate scientific validation content.
 
-`PROJECT.md` 存储：
+`PROJECT.md` stores:
 
-- 项目名称。
-- 目标体系或应用域。
-- 当前 workspace 约定。
-- 当前已知的 MCP/skill 状态摘要或引用。
-- 已批准的高层决策。
-- 当前 acceptance criteria 的路径或引用。
+- Project name.
+- Target system or application domain.
+- Current workspace conventions.
+- Summary or reference for known MCP/skill status.
+- Approved high-level decisions.
+- Path or reference for current acceptance criteria.
 
 ## 12. Tool Policy
 
-`mlpcopilot` 默认工具：
+Default tools for the `mlpcopilot` profile:
 
 - `ask_user`
-- `my`（默认只读，只有显式启用 `tools.my.allowSet` 时才允许修改运行时状态）
+- `my`, read-only by default; it can modify runtime state only when
+  `tools.my.allowSet` is explicitly enabled.
 - `read_file`
 - `file_info`
 - `list_dir`
@@ -197,34 +220,47 @@ Runtime 只创建目录和基础模板，不生成科学验证内容。
 - `message`
 - `workstate`
 - `mcp_*`
-- `web_search` / `web_fetch` 仅在显式启用 web tools 时注册。
-- `exec` 仅在显式启用且配置 allowlist 时注册。
+- `web_search` / `web_fetch`, registered only when web tools are explicitly
+  enabled.
+- `exec`, registered only when it is explicitly enabled and an allowlist is
+  configured.
 
-审批策略：
+Approval policy:
 
-- agent 侧所有内置工具和 MCP 工具调用统一经过 runtime ApprovalManager。
-- `tools.approvalAllowlist` 精确匹配放行工具名；`mlpcopilot` 默认放行只读/状态工具，例如 `read_file`、`list_dir`、`grep`、`glob`、`file_info`、`web_search`、`web_fetch`、`workstate`。
-- MCP 工具若通过标准 `ToolAnnotations.readOnlyHint=true` 标注为只读，且未标注 `destructiveHint=true`，runtime 默认放行；未标注或可能修改文件/启动任务/取消任务的 MCP 工具继续审批。
-- `exec` 保留独立策略：精确 `allowCommands` 可直接放行；其他命令按 exec 自身 approval flow 阻塞。
-- `!cmd` 是 TUI 终端模式，不进入 agent tool approval policy。
+- All agent-side built-in tool calls and MCP tool calls go through the runtime
+  ApprovalManager.
+- `tools.approvalAllowlist` uses exact tool-name matches. The `mlpcopilot`
+  defaults allow read-only or status tools such as `read_file`, `list_dir`,
+  `grep`, `glob`, `file_info`, `web_search`, `web_fetch`, and `workstate`.
+- MCP tools annotated with standard `ToolAnnotations.readOnlyHint=true` are
+  allowed by default when they do not also declare `destructiveHint=true`.
+  Unannotated MCP tools, or tools that may modify files, start tasks, or cancel
+  tasks, still require approval.
+- `exec` keeps its own policy: exact `allowCommands` entries may run directly;
+  all other commands block through the exec approval flow.
+- `!cmd` is a TUI terminal mode and does not enter the agent tool approval
+  policy.
 
-禁止：
+Forbidden:
 
-- 通过 LLM 上下文传输大数据集、轨迹或大段结构坐标。
-- 让 LLM 自行生成科学指标。
-- 让 plugin 在 MCP 输出中声明 `approval_hint`、`requires_approval` 或通过 `approved=true` 绕过 runtime ApprovalManager。
+- Passing large datasets, trajectories, or long coordinate payloads through LLM
+  context.
+- Letting the LLM generate scientific metrics on its own.
+- Letting plugins declare `approval_hint`, `requires_approval`, or `approved=true`
+  in MCP output to bypass the runtime ApprovalManager.
 
-## 13. MCP 接入
+## 13. MCP Integration
 
-Runtime 使用 mlpcopilot 已有 MCP client，不在 core 中实现科学 MCP 逻辑。
+The runtime uses the existing `mlpcopilot` MCP client. It does not implement
+scientific MCP logic in core.
 
-支持：
+Supported transports:
 
-- `stdio`：本地 MCP server。
-- `sse`：远程 SSE MCP endpoint。
-- `streamableHttp`：远程 HTTP MCP endpoint。
+- `stdio`: local MCP server.
+- `sse`: remote SSE MCP endpoint.
+- `streamableHttp`: remote HTTP MCP endpoint.
 
-配置示例：
+Config example:
 
 ```json
 {
@@ -248,36 +284,40 @@ Runtime 使用 mlpcopilot 已有 MCP client，不在 core 中实现科学 MCP �
 }
 ```
 
-Runtime 需要增强：
+Runtime enhancements:
 
-- 在 TUI 中显示 MCP server 连接状态。
-- 在 tool log 中显示 MCP server、tool、duration、status。
-- 对远程 MCP 失败给出可操作错误。
-- MCP/skill 来源由源码自动发现和 config 显式配置决定；runtime 可展示连接状态，但不写入单独的 workspace capability 配置文件。
+- Show MCP server connection status in the TUI.
+- Show MCP server, tool, duration, and status in the tool log.
+- Provide actionable errors for remote MCP failures.
+- Discover MCP/skill sources from source-tree discovery and explicit config.
+  The runtime may display connection state, but it must not create a separate
+  workspace capability config file.
 
-## 14. Skill 接入
+## 14. Skill Integration
 
-Runtime 不定义 MLP skills 内容，只负责加载和展示。
+The runtime does not define MLP skill content. It only loads and displays skills.
 
-要求：
+Requirements:
 
-- workspace `skills/` 下的 skill 可被发现。
-- `disabledSkills` 可关闭无关 skill。
-- TUI 能显示当前启用 skill 列表。
-- ContextBuilder 注入 skill summary 时受 token budget 限制。
-- Skill 不得声明自己能直接生成科学指标。
+- Skills under workspace `skills/` can be discovered.
+- `disabledSkills` can disable unrelated skills.
+- The TUI can display the enabled skill list.
+- `ContextBuilder` injects skill summaries under a token budget.
+- Skills must not claim that they can directly generate scientific metrics.
 
 ## 15. TUI
 
-TUI 交互与模块化重构的详细要求见 `MLPCOPILOT_TUI_CODEX_INTERACTION_PRD.md`。本节只保留 runtime 主 PRD 的范围和首版形态。
+Detailed TUI interaction and modularization requirements are defined in
+`MLPCOPILOT_TUI_CODEX_INTERACTION_PRD.md`. This section keeps only the runtime
+PRD scope and first-version shape.
 
-新增命令：
+Add command:
 
 ```bash
 mlpcopilot tui
 ```
 
-首版布局：
+First-version layout:
 
 ```text
 ┌──────────────────────────────┬──────────────────────────────┐
@@ -288,20 +328,21 @@ mlpcopilot tui
 Status: model | workspace | MCP | skills | run_id | pending approvals | Telegram
 ```
 
-Pane：
+Panes:
 
-- Chat / Task：对话、计划草稿、用户输入。
-- Tool Log：工具调用、MCP server、参数摘要、状态、耗时、错误。
-- Artifacts：manifest、metrics、report、figures、logs。
-- Approvals：待审批、批准、拒绝、要求修改。
+- Chat / Task: conversation, plan drafts, user input.
+- Tool Log: tool calls, MCP server, argument summary, status, duration, errors.
+- Artifacts: manifests, metrics, reports, figures, logs.
+- Approvals: pending, approved, rejected, and needs-changes decisions.
 
-MVP 可先实现只读 TUI + approval 操作；复杂 artifact 浏览后置。
+The MVP may start with a read-only TUI plus approval operations. Advanced
+artifact browsing can follow later.
 
 ## 16. Telegram
 
-Telegram 是唯一默认远程 gateway。
+Telegram is the only default remote gateway.
 
-命令：
+Commands:
 
 ```text
 /status
@@ -314,17 +355,17 @@ Telegram 是唯一默认远程 gateway。
 /help
 ```
 
-限制：
+Limitations:
 
-- 不在 Telegram 中展示长报告。
-- 不在 Telegram 中浏览大日志。
-- 不允许未授权用户触发任务。
+- Do not show long reports in Telegram.
+- Do not browse large logs in Telegram.
+- Do not let unauthorized users trigger tasks.
 
-必须配置 `allowFrom`。
+`allowFrom` must be configured.
 
 ## 17. OpenAI-Compatible API
 
-保留：
+Retain:
 
 ```text
 GET  /health
@@ -332,35 +373,35 @@ GET  /v1/models
 POST /v1/chat/completions
 ```
 
-要求：
+Requirements:
 
-- 支持 `session_id`。
-- 支持 streaming。
-- 支持文件上传或路径引用。
-- API session 可触发相同 approval workflow。
-- 默认绑定 `127.0.0.1`。
-- 对公网暴露前必须配置 API key 或反向代理鉴权。
+- Support `session_id`.
+- Support streaming.
+- Support file upload or path references.
+- API sessions can trigger the same approval workflow.
+- Bind to `127.0.0.1` by default.
+- Require an API key or authenticated reverse proxy before public exposure.
 
 ## 18. ApprovalManager
 
-ApprovalManager 是 runtime 能力，不属于 MCP 插件。
+ApprovalManager is a runtime capability, not an MCP plugin capability.
 
-职责：
+Responsibilities:
 
-- 创建审批项。
-- 阻塞 gated action。
-- 接收 TUI、Telegram、CLI、API 的审批结果。
-- 记录 decision log。
-- 将 approval record 写入 run manifest。
+- Create approval items.
+- Block gated actions.
+- Receive decisions from the TUI, Telegram, CLI, and API.
+- Record the decision log.
+- Write approval records into run manifests.
 
-存储：
+Storage:
 
 ```text
 approvals/pending.jsonl
 approvals/decisions.jsonl
 ```
 
-审批状态：
+Approval states:
 
 - `pending`
 - `approved`
@@ -369,26 +410,26 @@ approvals/decisions.jsonl
 - `needs_changes`
 - `expired`
 
-必须审批的动作类型：
+Action types that require approval:
 
-- 执行中高成本任务。
-- 标记 checkpoint 可用于目标场景。
-- 修改 project-level acceptance criteria。
-- 更新长期 memory 中的确认事实。
-- 删除或覆盖已有 run artifact。
-- 对外导出或推送结果。
+- Running medium- or high-cost tasks.
+- Marking a checkpoint as usable for the target scenario.
+- Changing project-level acceptance criteria.
+- Updating confirmed facts in long-term memory.
+- Deleting or overwriting existing run artifacts.
+- Exporting or pushing results externally.
 
 ## 19. ArtifactIndex
 
-ArtifactIndex 是 runtime 能力。
+ArtifactIndex is a runtime capability.
 
-每个 run 至少有：
+Each run has at least:
 
 ```text
 runs/<run_id>/manifest.json
 ```
 
-字段：
+Fields:
 
 ```json
 {
@@ -403,11 +444,15 @@ runs/<run_id>/manifest.json
 }
 ```
 
-Runtime 不解释科学指标，只保证 artifact 可索引、可追溯。
+The runtime does not interpret scientific metrics. It only makes artifacts
+indexable and traceable.
 
-已实现：`RunManifest` / `ArtifactIndex` 支持 `metrics`、`lineage`、`decisions` evidence 字段，用于记录 MLP 工作流中的证据链。该扩展仍属于 runtime 索引能力，不把 dataset validation、checkpoint inference、benchmark 或主动学习算法写入 core。
+Implemented state: `RunManifest` / `ArtifactIndex` support `metrics`, `lineage`,
+and `decisions` evidence fields for MLP workflow evidence. This remains runtime
+indexing capability and does not add dataset validation, checkpoint inference,
+benchmark, or active-learning algorithms to core.
 
-建议扩展字段：
+Suggested extension fields:
 
 ```json
 {
@@ -450,34 +495,37 @@ Runtime 不解释科学指标，只保证 artifact 可索引、可追溯。
 }
 ```
 
-要求：
+Requirements:
 
-- 数值结论必须引用 `metrics[*].source_artifact` 或具体 artifact path。
-- TUI、Telegram 和 API 只展示 evidence 摘要；大文件通过 artifact path 或 `/raw` 查看。
-- MCP/Skill 负责生成科学指标和报告，Runtime 只记录路径、hash、类型、producer 和引用关系。
+- Numeric conclusions must reference `metrics[*].source_artifact` or a concrete
+  artifact path.
+- TUI, Telegram, and API surfaces show evidence summaries only. Large files are
+  viewed through artifact paths or `/raw`.
+- MCP/Skill plugins generate scientific metrics and reports. The runtime records
+  path, hash, type, producer, and references.
 
 ## 20. Memory Policy
 
-Memory 层：
+Memory layers:
 
-| 层 | 文件 | 用途 |
+| Layer | File | Purpose |
 |---|---|---|
-| session | `sessions/*.jsonl` | 会话历史 |
-| history | `memory/history.jsonl` | 历史摘要 |
-| project | `PROJECT.md` | 项目状态 |
-| long-term | `memory/MEMORY.md` | 人类确认事实 |
-| artifact | `runs/*/manifest.json` | 工具证据 |
+| session | `sessions/*.jsonl` | Session history |
+| history | `memory/history.jsonl` | Historical summaries |
+| project | `PROJECT.md` | Project state |
+| long-term | `memory/MEMORY.md` | Human-confirmed facts |
+| artifact | `runs/*/manifest.json` | Tool evidence |
 
-规则：
+Rules:
 
-- 不把原始结构坐标写入长期 memory。
-- 不把一次性日志写入长期 memory。
-- 长期事实更新需要 approval。
-- 数值结论优先引用 artifact。
+- Do not write raw structure coordinates into long-term memory.
+- Do not write one-off logs into long-term memory.
+- Long-term fact updates require approval.
+- Numeric conclusions should reference artifacts first.
 
 ## 21. CLI
 
-保留：
+Retain:
 
 ```bash
 mlpcopilot agent
@@ -485,7 +533,7 @@ mlpcopilot serve
 mlpcopilot gateway
 ```
 
-新增：
+Add:
 
 ```bash
 mlpcopilot tui
@@ -499,9 +547,10 @@ mlpcopilot mlp approve <approval_id>
 mlpcopilot mlp reject <approval_id>
 ```
 
-`mlpcopilot mlp` 命令只管理 runtime 状态，不执行科学算法。
+`mlpcopilot mlp` commands manage runtime state only. They do not execute
+scientific algorithms.
 
-## 22. 配置示例
+## 22. Config Example
 
 ```json
 {
@@ -546,100 +595,105 @@ mlpcopilot mlp reject <approval_id>
 
 ## 23. MVP Scope
 
-MVP 包括：
+MVP includes:
 
-1. `mlpcopilot` runtime profile。
-2. channel whitelist，默认只启用 Telegram。
-3. workspace initializer。
-4. minimal tool policy。
-5. MCP status display。
-6. workspace skill loading and status display。
-7. ApprovalManager。
-8. ArtifactIndex。
-9. TUI 四 pane skeleton。
-10. Telegram approval。
-11. CLI approval。
-12. OpenAI-compatible API 保持可用。
+1. `mlpcopilot` runtime profile.
+2. Channel whitelist, with Telegram enabled by default.
+3. Workspace initializer.
+4. Minimal tool policy.
+5. MCP status display.
+6. Workspace skill loading and status display.
+7. ApprovalManager.
+8. ArtifactIndex.
+9. Four-pane TUI skeleton.
+10. Telegram approval.
+11. CLI approval.
+12. OpenAI-compatible API remains usable.
 
-MVP 不包括：
+MVP does not include:
 
-- MLP 数据校验。
-- MLP 模型推理。
-- validation planning skill。
-- 远程 job scheduler。
-- 完整 WebUI。
+- MLP dataset validation.
+- MLP model inference.
+- Validation-planning skill.
+- Remote job scheduler.
+- Full WebUI.
 
-## 24. 工作量估算
+## 24. Effort Estimate
 
-| 范围 | 预计工作量 | 说明 |
+| Scope | Estimate | Notes |
 |---|---:|---|
-| Lean runtime | 2-3 周 | profile、workspace、channel whitelist、approval、artifact、CLI |
-| Runtime MVP | 3-5 周 | 加 TUI skeleton、Telegram approval、MCP/skill 状态展示、API workflow |
-| Robust runtime | 6-8 周 | 更完整权限、错误恢复、TUI polish、测试和文档 |
+| Lean runtime | 2-3 weeks | Profile, workspace, channel whitelist, approvals, artifacts, CLI |
+| Runtime MVP | 3-5 weeks | TUI skeleton, Telegram approval, MCP/skill status display, API workflow |
+| Robust runtime | 6-8 weeks | Fuller permissions, error recovery, TUI polish, tests, docs |
 
-先做 Lean runtime，再接 MCP/Skill 插件。
+Build the lean runtime first, then connect MCP/Skill plugins.
 
-## 25. 实施计划
+## 25. Implementation Plan
 
-当前状态：runtime MVP 已基本完成。以下 phase 作为实现历史和验收映射保留，不再表示近期待办队列。真实部署 smoke 和人工 TUI visual smoke 属于低优先级 release checklist。
+Current state: the runtime MVP is largely implemented. The phases below remain
+as implementation history and acceptance mapping; they are no longer the active
+near-term queue. Real deployment smoke tests and manual TUI visual smoke tests
+are low-priority release checklist items.
 
 ### Phase 1: Profile And Workspace
 
-- 增加 `runtimeProfile`。
-- 增加 `mlpcopilot` profile。
-- 增加 workspace initializer。
-- 增加 `PROJECT.md` 和目录模板。
-- 禁用无关通道和工具。
+- Add `runtimeProfile`.
+- Add the `mlpcopilot` profile.
+- Add the workspace initializer.
+- Add `PROJECT.md` and directory templates.
+- Disable unrelated channels and tools.
 
 ### Phase 2: Plugin Host
 
-- 保留 MCP client。
-- 增加 MCP connection status。
-- 增加 skill status。
-- 限制 tool registration。
+- Keep the MCP client.
+- Add MCP connection status.
+- Add skill status.
+- Restrict tool registration.
 
 ### Phase 3: Approval And Artifact
 
-- 增加 ApprovalManager。
-- 增加 pending/decision storage。
-- 增加 ArtifactIndex。
-- 将 approval record 关联到 run manifest。
+- Add ApprovalManager.
+- Add pending/decision storage.
+- Add ArtifactIndex.
+- Link approval records to run manifests.
 
 ### Phase 4: TUI And Telegram
 
-- 增加 `mlpcopilot tui`。
-- 实现四 pane skeleton。
-- 实现 approval pane。
-- Telegram 支持 approve/reject/changes。
+- Add `mlpcopilot tui`.
+- Implement the four-pane skeleton.
+- Implement the approval pane.
+- Support approve/reject/changes in Telegram.
 
 ### Phase 5: API And Hardening
 
-- API 支持 approval workflow。
-- 补充 config validation。
-- 补充权限和路径校验。
-- 增加基础测试。
+- Support approval workflow in the API.
+- Add config validation.
+- Add permission and path validation.
+- Add baseline tests.
 
-## 26. 验收标准
+## 26. Acceptance Criteria
 
-1. 可以用 `runtimeProfile=mlpcopilot` 启动。
-2. 默认只加载 Telegram、CLI、API。
-3. 默认关闭 web、exec、spawn、notebook。
-4. 可以初始化 MLP workspace。
-5. 可以连接本地或远程 MCP server。
-6. 可以显示已启用 MCP tools 和 skills。
-7. gated action 会创建 approval。
-8. 未批准的 gated action 不会执行。
-9. approval 可通过 TUI、Telegram、CLI 处理。
-10. run manifest 可记录 tool source、inputs、outputs、artifacts、approval。
-11. OpenAI-compatible API 仍可使用。
-12. Runtime core 中不包含 MLP 数据校验或模型推理算法。
+1. The runtime can start with `runtimeProfile=mlpcopilot`.
+2. Only Telegram, CLI, and API are loaded by default.
+3. Web, exec, spawn, and notebook are disabled by default.
+4. The MLP workspace can be initialized.
+5. The runtime can connect to local or remote MCP servers.
+6. Enabled MCP tools and skills can be displayed.
+7. A gated action creates an approval.
+8. An unapproved gated action does not execute.
+9. Approvals can be handled through TUI, Telegram, and CLI.
+10. Run manifests can record tool source, inputs, outputs, artifacts, and
+    approval.
+11. The OpenAI-compatible API remains usable.
+12. Runtime core does not contain MLP dataset-validation or model-inference
+    algorithms.
 
-## 27. 风险
+## 27. Risks
 
-| 风险 | 缓解 |
+| Risk | Mitigation |
 |---|---|
-| core 继续膨胀 | 严格禁止科学算法进入 runtime |
-| TUI 拖慢首版 | 先做 skeleton，复杂 artifact 浏览后置 |
-| approval 形式化 | gated action 无 approval 必须 blocked |
-| 远程 MCP 安全风险 | token、headers、workspace scoped references、超时 |
-| skill 注入过多污染上下文 | skill summary 限制 token budget |
+| Core keeps expanding | Strictly keep scientific algorithms out of runtime |
+| TUI slows down the first version | Start with a skeleton and defer advanced artifact browsing |
+| Approval becomes performative | Gated actions without approvals must be blocked |
+| Remote MCP security risk | Require tokens, headers, workspace-scoped references, and timeouts |
+| Skill injection pollutes context | Limit skill summaries with a token budget |

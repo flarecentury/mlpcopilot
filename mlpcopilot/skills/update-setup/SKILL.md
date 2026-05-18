@@ -1,6 +1,6 @@
 ---
 name: update-setup
-description: One-time setup wizard for the mlpcopilot upgrade skill. Triggers: setup update, configure update, 切设置更新, 初始化更新.
+description: One-time setup wizard for the mlpcopilot upgrade skill. Triggers: setup update, configure update, initialize update, update setup.
 ---
 
 # Update Setup
@@ -70,7 +70,7 @@ Use `write_file` to write `skills/update/SKILL.md` with this content:
 ```
 ---
 name: update
-description: "Upgrade mlpcopilot to the latest version. Triggers: upgrade mlpcopilot, update mlpcopilot, 升级mlpcopilot, 更新mlpcopilot."
+description: "Upgrade mlpcopilot to the latest version. Triggers: upgrade mlpcopilot, update mlpcopilot, refresh mlpcopilot, upgrade the runtime."
 ---
 
 # Update MLPCopilot

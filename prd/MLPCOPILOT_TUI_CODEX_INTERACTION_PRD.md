@@ -1,132 +1,146 @@
 # PRD: MLP Copilot TUI Codex-Style Interaction Refactor
 
-## 1. 产品定位
+## 1. Product Positioning
 
-**MLP Copilot TUI** 是 MLP Copilot Runtime 的本地主工作台，面向长时间 MLP 训练、主动学习、DFT 计算、数据审查、MCP 工具调用和人工审批。
+**MLP Copilot TUI** is the local primary workbench for MLP Copilot Runtime. It
+supports long-running MLP training, active learning, DFT calculations, data
+review, MCP tool calls, and human approvals.
 
-本 PRD 是 `MLPCOPILOT_RUNTIME_PRD.md` 的 TUI 细化补充，目标是借鉴 Codex CLI 的交互模型，同时保留 MLP Copilot 当前的四窗格工作台设计。
+This PRD extends `MLPCOPILOT_RUNTIME_PRD.md` with TUI-specific requirements. The
+goal is to learn from the Codex CLI interaction model while preserving MLP
+Copilot's current multi-pane workbench design.
 
-核心判断：
+Core decisions:
 
-- 借鉴 Codex CLI 的输入、slash command、审批、overlay、任务控制体验。
-- 不复制 Codex 的 Rust/ratatui 代码。
-- 保留 MLP Copilot 当前的 Chat / Campaign / Tool Log / Artifacts / Approvals 工作台布局。
-- TUI 架构必须模块化，后续可以切换不同 layout。
+- Adopt Codex-style input, slash-command, approval, overlay, and task-control
+  behavior.
+- Do not copy Codex implementation code.
+- Preserve the current Chat / Campaign / Tool Log / Artifacts / Approvals
+  workbench layout.
+- Keep the TUI architecture modular so later layouts can be swapped in.
 
-## 2. 背景
+## 2. Background
 
-当前 TUI 已具备以下能力：
+The current TUI already provides:
 
-- Chat / Task pane。
-- Campaign pane。
-- Tool Log pane。
-- Artifacts pane。
-- Approvals pane。
-- 输入框历史。
-- `/approve`、`/reject`、`/changes`、`/runs`、`/artifacts` 等 slash command。
-- 审批 overlay。
-- 工具日志持久化。
-- 后台 exec 初步支持。
+- Chat / Task pane.
+- Campaign pane.
+- Tool Log pane.
+- Artifacts pane.
+- Approvals pane.
+- Input history.
+- Slash commands such as `/approve`, `/reject`, `/changes`, `/runs`, and
+  `/artifacts`.
+- Approval overlay.
+- Persistent tool logs.
+- Initial background exec support.
 
-但当前实现仍有明显工程债：
+The implementation still has engineering debt:
 
-- 输入、命令、审批、渲染、状态机仍耦合在少数模块中。
-- slash command 的 local / agent / queued 边界不够强。
-- 运行中命令有时会被排队，不能像 Codex 一样即时响应。
-- approval、pager、picker 等 overlay 没有统一抽象。
-- layout 写死在渲染层，后续切换 Campaign-focused layout 成本较高。
-- 长任务、后台任务、Tool Log、Chat 输出之间的边界仍需收敛。
+- Input, commands, approvals, rendering, and state transitions are still coupled
+  in a small number of modules.
+- Boundaries between local, agent, and queued slash commands are not strong
+  enough.
+- Some commands are queued while a task is running, instead of responding
+  immediately in the Codex style.
+- Approval, pager, and picker overlays do not share a common abstraction.
+- Layout behavior is hard-coded in rendering, making later campaign-focused
+  layouts expensive.
+- Boundaries between long tasks, background jobs, Tool Log, and Chat output need
+  to be tightened.
 
-## 3. 目标
+## 3. Goals
 
-1. 复刻 Codex CLI 的核心交互体验：
-   - slash command 注册表。
-   - slash popup。
-   - 方向键选择。
-   - Enter 确认。
-   - Esc 拒绝或关闭。
-   - 运行中 local command 即时执行。
-   - approval overlay 强阻塞。
-   - pager 查看长消息。
-   - 后台任务管理。
+1. Reproduce the core Codex CLI interaction feel:
+   - Slash-command registry.
+   - Slash popup.
+   - Arrow-key selection.
+   - Enter confirmation.
+   - Esc reject or close.
+   - Immediate local commands while a task is running.
+   - Strong blocking approval overlay.
+   - Pager for long messages.
+   - Background task management.
 
-2. 保留 MLP Copilot 当前 TUI 产品形态：
-   - Chat / Task。
-   - Campaign。
-   - Tool Log。
-   - Artifacts。
-   - Approvals。
-   - 当前输入框和 footer。
+2. Preserve the current MLP Copilot TUI product shape:
+   - Chat / Task.
+   - Campaign.
+   - Tool Log.
+   - Artifacts.
+   - Approvals.
+   - Current input box and footer.
 
-3. 将 TUI 重构为可演化架构：
-   - Controller。
-   - State。
-   - Input composer。
-   - Command registry。
-   - Command dispatcher。
-   - Overlay stack。
-   - Layout spec。
-   - View renderer。
-   - Persistent stores。
+3. Refactor the TUI into an evolvable architecture:
+   - Controller.
+   - State.
+   - Input composer.
+   - Command registry.
+   - Command dispatcher.
+   - Overlay stack.
+   - Layout spec.
+   - View renderer.
+   - Persistent stores.
 
-4. 支持后续不同 layout：
-   - 当前四窗格 layout。
-   - compact layout。
-   - campaign-focused layout。
-   - approvals-focused layout。
-   - mobile/remote snapshot layout。
+4. Support later layouts:
+   - Current four-pane layout.
+   - Compact layout.
+   - Campaign-focused layout.
+   - Approvals-focused layout.
+   - Mobile or remote snapshot layout.
 
-5. 保持 runtime / plugin 边界：
-   - TUI 不实现 MLP 科学算法。
-   - TUI 只展示 MCP、skills、runs、artifacts、jobs、approvals。
-   - 指标和报告仍来自 MCP 或 artifact。
+5. Preserve runtime/plugin boundaries:
+   - The TUI does not implement MLP scientific algorithms.
+   - The TUI displays MCPs, skills, runs, artifacts, jobs, and approvals.
+   - Metrics and reports still come from MCP tools or artifacts.
 
-## 4. 非目标
+## 4. Non-Goals
 
-1. 不重写为 Rust。
-2. 不引入 ratatui。
-3. 不复制 Codex 源码。
-4. 不实现 Web UI。
-5. 不把主动学习、DFT、训练调度算法写入 TUI。
-6. 不让 TUI 直接判断科学结果是否可靠。
-7. 不把 Tool Log 当作 run manifest。
-8. 不把长 stdout 直接塞满 Chat。
+1. Do not rewrite the TUI in Rust.
+2. Do not introduce `ratatui`.
+3. Do not copy Codex source code.
+4. Do not implement a Web UI.
+5. Do not implement active-learning, DFT, or training-scheduling algorithms in
+   the TUI.
+6. Do not let the TUI judge whether scientific results are reliable.
+7. Do not treat Tool Log as the run manifest.
+8. Do not dump long stdout into Chat.
 
-## 5. Codex CLI 可借鉴点
+## 5. Codex CLI Ideas To Reuse
 
-参考源码：
+Relevant Codex CLI design areas:
 
 ```text
-/home/flare/TRAE_PJS/other/codex/codex-rs/tui/src/slash_command.rs
-/home/flare/TRAE_PJS/other/codex/codex-rs/tui/src/chatwidget/slash_dispatch.rs
-/home/flare/TRAE_PJS/other/codex/codex-rs/tui/src/bottom_pane/approval_overlay.rs
-/home/flare/TRAE_PJS/other/codex/codex-rs/protocol/src/approvals.rs
+slash command metadata and dispatch
+approval overlays
+protocol-level approval states
+background task listing and stopping
+pager behavior for long content
 ```
 
-借鉴内容：
+Ideas to absorb:
 
-| Codex 设计 | MLP Copilot 吸收方式 |
+| Codex design | MLP Copilot implementation |
 |---|---|
-| SlashCommand enum + metadata | Python command registry |
-| available_during_task | 命令运行中可用性控制 |
-| supports_inline_args | slash popup 和输入解析 |
-| slash command history | slash 命令进入输入历史 |
-| approval overlay | 强阻塞审批弹窗 |
-| Esc is safe cancel/reject | Esc 拒绝审批或关闭 overlay |
-| local command dispatch | `/status`、`/runs` 等不进模型 |
-| background process listing | `/ps`、`/stop <job_id>` |
-| pager for long content | 长消息不塞爆主 Chat pane |
+| SlashCommand enum plus metadata | Python command registry |
+| `available_during_task` | Command availability while a task is running |
+| `supports_inline_args` | Slash popup and input parsing |
+| Slash-command history | Slash commands enter input history |
+| Approval overlay | Strong blocking approval dialog |
+| Esc is safe cancel/reject | Esc rejects approval or closes overlay |
+| Local command dispatch | `/status`, `/runs`, and similar commands do not enter the model |
+| Background process listing | `/ps`, `/stop <job_id>` |
+| Pager for long content | Long content does not flood the main Chat pane |
 
-不借鉴内容：
+Ideas not to absorb:
 
-- Rust/ratatui 组件实现。
-- Codex 产品命令全集。
-- Codex 多 agent 叙事。
-- Codex 云端账号、plugin marketplace、IDE 专有行为。
+- Rust or `ratatui` component implementation.
+- The full Codex product command set.
+- Multi-agent product narrative.
+- Cloud-account, plugin-marketplace, or IDE-specific behavior.
 
-## 6. 目标用户体验
+## 6. Target User Experience
 
-### 6.1 常规输入
+### 6.1 Normal Input
 
 ```text
 User types text
@@ -137,9 +151,12 @@ PgUp/PgDn -> scroll Chat
 Ctrl-C -> quit
 ```
 
-这些快捷键必须可通过 `tui.keymap` 覆盖。默认值保留 Codex 风格的 `Ctrl-*` 组合键，但在 Firefox/Jupyter/浏览器终端中，用户应可切换为 `F7/F8/F9/F10/F12` 等不容易被宿主截获的按键。空列表表示禁用该动作快捷键。
+These keys must be overridable through `tui.keymap`. Defaults keep Codex-style
+`Ctrl-*` combinations, but users in Firefox, Jupyter, or browser terminals must
+be able to switch to less frequently intercepted keys such as `F7/F8/F9/F10/F12`.
+An empty list disables the shortcut for that action.
 
-### 6.2 Slash command
+### 6.2 Slash Command
 
 ```text
 User types /
@@ -151,7 +168,7 @@ Inline args remain editable
 Submitted slash command is added to history
 ```
 
-示例：
+Examples:
 
 ```text
 /status
@@ -168,7 +185,7 @@ Submitted slash command is added to history
 
 ### 6.3 Approval
 
-当出现 pending approval：
+When a pending approval appears:
 
 ```text
 Approval Required overlay opens
@@ -179,7 +196,7 @@ Esc rejects
 F4 requests changes
 ```
 
-同时保留文本命令：
+Text commands remain available:
 
 ```text
 /approve <approval_id>
@@ -187,36 +204,39 @@ F4 requests changes
 /changes <approval_id>
 ```
 
-理由：
+Rationale:
 
-- TUI 需要键盘丝滑审批。
-- Telegram / CLI / API 需要文本式审批。
+- The TUI needs smooth keyboard approvals.
+- Telegram, CLI, and API need text-form approvals.
 
-### 6.4 Long output
+### 6.4 Long Output
 
-长输出处理规则：
+Long-output rules:
 
-- 短摘要进入 Chat。
-- 完整 stdout/stderr 进入 job log 或 artifact。
-- Chat 中提供 log path 或 artifact path。
-- 配置的 pager shortcut 或 Enter on message 打开 pager。
-- Tool Log 只显示摘要行。
+- Short summaries enter Chat.
+- Full stdout/stderr goes to a job log or artifact.
+- Chat includes the log path or artifact path.
+- The configured pager shortcut, or Enter on a message, opens the pager.
+- Tool Log shows summary rows only.
 
-### 6.5 Long-running command
+### 6.5 Long-Running Command
 
-长任务处理规则：
+Long-running command rules:
 
-- `!<cmd>` 是 TUI 终端直通模式：直接交给本地 `/bin/bash` 执行，不进入 agent、不走 runtime tool approval、也不做 allowlist 限制；命令会阻塞 TUI worker 直到退出。
-- `cmatrix`、`htop`、`top`、`watch` 等交互/常驻命令默认后台化。
-- 用户显式 `background=true` 时后台化。
-- 后台任务进入 jobs store。
-- `/ps` 展示后台任务。
-- `/stop <job_id>` 停止后台任务。
-- `/stop` 停止当前前台 agent turn。
+- `!<cmd>` is TUI terminal pass-through mode. It runs directly through local
+  `/bin/bash`; it does not enter the agent, runtime tool approval, or allowlist
+  policy. The command blocks the TUI worker until it exits.
+- Interactive or resident commands such as `cmatrix`, `htop`, `top`, and `watch`
+  are backgrounded by default.
+- Commands are backgrounded when the user explicitly requests `background=true`.
+- Background tasks enter the jobs store.
+- `/ps` lists background tasks.
+- `/stop <job_id>` stops a background task.
+- `/stop` stops the current foreground agent turn.
 
-## 7. 信息架构
+## 7. Information Architecture
 
-默认 layout 保持当前形态：
+Default layout keeps the current shape:
 
 ```text
 ┌──────────────────────────────┬──────────────────────┐
@@ -232,23 +252,27 @@ F4 requests changes
 Footer
 ```
 
-Pane 职责：
+Pane responsibilities:
 
-| Pane | 职责 |
+| Pane | Responsibility |
 |---|---|
-| Chat / Task | 对话、任务摘要、agent 回复、必要的系统消息 |
-| Campaign | 主动学习/训练/DFT campaign 总览，由外部脚本或 artifact 提供数据；默认读 `active_learning/status.{json,md,txt}` 和 `campaign/status.{json,md,txt}`，可通过 `tui.campaignStatusPaths` 配置 |
-| Tool Log | 最近工具调用摘要、状态、耗时、目标 |
-| Artifacts | workspace 中有价值的报告、日志、manifest、知识库文件 |
-| Approvals | pending approval 和最近审批历史 |
-| Input | 输入、slash command、历史 |
-| Footer | 当前状态和关键快捷键 |
+| Chat / Task | Conversation, task summary, agent replies, necessary system messages |
+| Campaign | Active-learning, training, and DFT campaign overview from external scripts or artifacts; default reads `active_learning/status.{json,md,txt}` and `campaign/status.{json,md,txt}`, configurable through `tui.campaignStatusPaths` |
+| Tool Log | Recent tool-call summaries, status, duration, and target |
+| Artifacts | Valuable reports, logs, manifests, and knowledge-base files in the workspace |
+| Approvals | Pending approvals and recent approval history |
+| Input | Input, slash command, history |
+| Footer | Current state and important shortcuts |
 
 ### 7.1 Campaign Status Schema
 
-已实现首版 `campaign/status.json` 和 `active_learning/status.json` 读模型，用于支撑主动学习、训练、DFT 计算等长流程的状态展示。
+The first `campaign/status.json` and `active_learning/status.json` read model is
+implemented to support status display for long workflows such as active
+learning, training, and DFT calculation.
 
-该 schema 只描述 runtime/TUI 可展示的状态引用，不在 TUI 中实现主动学习或科学算法。建议字段包括：
+This schema describes only state references that the runtime/TUI can display. It
+does not implement active-learning or scientific algorithms in the TUI.
+Suggested fields:
 
 ```json
 {
@@ -279,16 +303,18 @@ Pane 职责：
 }
 ```
 
-落地行为：
+Implemented behavior:
 
-- 默认读取 `active_learning/status.{json,md,txt}` 和 `campaign/status.{json,md,txt}`。
-- 可通过 `tui.campaignStatusPaths` 配置覆盖读取顺序；空列表表示禁用该 fallback。
-- 只读取 workspace 内路径。
-- `companion.display.json` 仍然优先于 status fallback。
+- Read `active_learning/status.{json,md,txt}` and `campaign/status.{json,md,txt}`
+  by default.
+- Allow `tui.campaignStatusPaths` to override read order; an empty list disables
+  this fallback.
+- Read only paths inside the workspace.
+- `companion.display.json` keeps priority over status fallback.
 
-## 8. 架构设计
+## 8. Architecture Design
 
-当前落地结构：
+Current structure:
 
 ```text
 mlpcopilot/runtime/tui/
@@ -305,9 +331,12 @@ mlpcopilot/runtime/tui/
 └── stores/
 ```
 
-`mlpcopilot.runtime.tui` 是当前 facade package：`__init__.py` 继续 re-export
-历史测试和外部调用依赖的符号，内部实现按 commands/input/overlays/layouts/views/stores
-分层。后续重构应优先在这些目录内继续拆小文件，而不是恢复单体 `tui_parts/`。
+`mlpcopilot.runtime.tui` is the current facade package. `__init__.py` continues
+to re-export symbols that historical tests and external callers depend on. The
+internal implementation is layered under `commands/`, `input/`, `overlays/`,
+`layouts/`, `views/`, and `stores/`. Future refactors should keep splitting
+files inside these directories instead of returning to a monolithic
+`tui_parts/`.
 
 ## 9. State Model
 
@@ -372,7 +401,7 @@ InputState
 
 ## 10. Command Registry
 
-命令定义：
+Command definition:
 
 ```python
 TuiCommand(
@@ -385,17 +414,17 @@ TuiCommand(
 )
 ```
 
-dispatch 类型：
+Dispatch kinds:
 
-| 类型 | 含义 | 示例 |
+| Kind | Meaning | Examples |
 |---|---|---|
-| `local` | TUI/Runtime 本地立即执行 | `/status`, `/runs`, `/artifacts`, `/approvals`, `/ps` |
-| `overlay` | 打开 TUI overlay | `/model`, `/help`, `/layout` |
-| `approval` | 修改 ApprovalManager | `/approve`, `/reject`, `/changes` |
-| `agent` | 进入 agent loop | `/plan`, `/goal` |
-| `session` | 影响会话 | `/new`, `/history` |
+| `local` | Execute immediately in TUI/runtime | `/status`, `/runs`, `/artifacts`, `/approvals`, `/ps` |
+| `overlay` | Open a TUI overlay | `/model`, `/help`, `/layout` |
+| `approval` | Modify ApprovalManager state | `/approve`, `/reject`, `/changes` |
+| `agent` | Enter the agent loop | `/plan`, `/goal` |
+| `session` | Affect session state | `/new`, `/history` |
 
-默认命令：
+Default commands:
 
 ```text
 /help
@@ -419,26 +448,29 @@ dispatch 类型：
 
 ## 11. Dispatch Rules
 
-优先级从高到低：
+Priority order:
 
-1. Active overlay key handling。
-2. Approval shortcut handling。
-3. Immediate local slash command。
-4. Task-sensitive command gating。
-5. Agent slash command。
-6. Normal user message。
+1. Active overlay key handling.
+2. Approval shortcut handling.
+3. Immediate local slash command.
+4. Task-sensitive command gating.
+5. Agent slash command.
+6. Normal user message.
 
-规则：
+Rules:
 
-- `/status`、`/runs`、`/artifacts`、`/approvals`、`/ps`、`/stop` 必须即时响应。
-- `/model`、`/new` 等会修改运行时状态的命令，任务运行中默认禁用。
-- 未识别 slash command 不发送给模型，返回 `Unknown command`。
-- 普通自然语言才进入 agent loop。
-- approval overlay 存在时，普通输入被阻塞，但 `/status`、`/approve`、`/reject`、`/changes`、`/stop` 可用。
+- `/status`, `/runs`, `/artifacts`, `/approvals`, `/ps`, and `/stop` must respond
+  immediately.
+- Commands that modify runtime state, such as `/model` and `/new`, are disabled
+  by default while a task is running.
+- Unknown slash commands are not sent to the model; return `Unknown command`.
+- Only ordinary natural-language messages enter the agent loop.
+- When an approval overlay exists, normal input is blocked, but `/status`,
+  `/approve`, `/reject`, `/changes`, and `/stop` remain usable.
 
 ## 12. Overlay System
 
-统一 overlay interface：
+Unified overlay interface:
 
 ```text
 Overlay
@@ -450,27 +482,27 @@ Overlay
 - blocks_input
 ```
 
-首批 overlay：
+Initial overlays:
 
-| Overlay | 用途 |
+| Overlay | Purpose |
 |---|---|
-| ApprovalOverlay | 当前审批 |
-| MessagePager | 查看长消息 |
-| SlashMenu | slash command 选择 |
-| ModelPicker | 模型选择 |
-| LayoutPicker | layout 切换 |
-| JobPicker | 后台任务选择 |
+| ApprovalOverlay | Current approval |
+| MessagePager | View long messages |
+| SlashMenu | Slash-command selection |
+| ModelPicker | Model selection |
+| LayoutPicker | Layout switching |
+| JobPicker | Background task selection |
 
-Overlay stack 规则：
+Overlay stack rules:
 
-- 同一时间只允许一个强阻塞 overlay。
-- ApprovalOverlay 优先级最高。
-- Esc 在 ApprovalOverlay 中等价于 reject，不是 silent close。
-- Esc 在 Pager/Picker 中关闭 overlay。
+- Only one strongly blocking overlay may exist at a time.
+- ApprovalOverlay has highest priority.
+- Esc in ApprovalOverlay means reject, not silent close.
+- Esc in Pager/Picker closes the overlay.
 
 ## 13. Layout System
 
-LayoutSpec：
+LayoutSpec:
 
 ```text
 LayoutSpec
@@ -480,16 +512,16 @@ LayoutSpec
 - render(app_state, panes, overlays)
 ```
 
-首批 layout：
+Initial layouts:
 
-| Layout | 用途 |
+| Layout | Purpose |
 |---|---|
-| `four_pane` | 默认工作台 |
-| `compact` | 小终端 |
-| `campaign_focus` | 主动学习/DFT 长任务监控 |
-| `approval_focus` | 远程审批或批量审批 |
+| `four_pane` | Default workbench |
+| `compact` | Small terminals |
+| `campaign_focus` | Active-learning and DFT long-task monitoring |
+| `approval_focus` | Remote approval or batch approval |
 
-切换命令：
+Switching commands:
 
 ```text
 /layout
@@ -497,39 +529,44 @@ LayoutSpec
 /layout campaign_focus
 ```
 
-首版支持 `four_pane`、`compact`、`campaign_focus`、`approval_focus`。`/layout <name>` 写入 workspace-local TUI state（`sessions/tui-state.json`），不修改用户 config。
+The first version supports `four_pane`, `compact`, `campaign_focus`, and
+`approval_focus`. `/layout <name>` writes workspace-local TUI state
+(`sessions/tui-state.json`) and does not modify user config.
 
 ## 14. Tool Log
 
-Tool Log 只显示摘要，不显示大块 JSON：
+Tool Log shows summaries only, not large JSON payloads:
 
 ```text
 Datetime    State   Tool    Action                         Time
-05-04 18:26 OK      mcp     task=检查数据库状态...          2.1s
+05-04 18:26 OK      mcp     task=check database status...   2.1s
 05-04 18:58 BG      exec    "cmatrix"                      -
 05-04 19:02 Error   exec    "rm file"                      0.0s
 ```
 
-状态：
+States:
 
-| State | 含义 |
+| State | Meaning |
 |---|---|
-| `OK` | 已真实执行并成功 |
-| `Error` | 已真实执行并失败 |
-| `Pending` | 等待审批 |
-| `BG` | 后台运行 |
-| `Stopped` | 被停止 |
+| `OK` | Actually executed and succeeded |
+| `Error` | Actually executed and failed |
+| `Pending` | Waiting for approval |
+| `BG` | Running in background |
+| `Stopped` | Stopped |
 
-要求：
+Requirements:
 
-- Tool Log pane 自动显示最新条目，避免新工具调用被挤到不可见区域。
-- Tool Log pane 只承担最近摘要视图；完整历史和手动滚动通过 `/tool-log` 或配置的 tool log shortcut 完成。
-- pager 中支持滚动查看完整历史，不影响主 layout 的焦点和输入。
-- 持久化到 `workspace/logs/tool-log.jsonl`。
+- The Tool Log pane automatically follows the newest entries so new tool calls
+  do not disappear outside the visible area.
+- The Tool Log pane is only a recent-summary view. Full history and manual
+  scrolling are handled through `/tool-log` or the configured tool-log shortcut.
+- The pager supports scrolling through full history without affecting main
+  layout focus or input.
+- Persist to `workspace/logs/tool-log.jsonl`.
 
 ## 15. Jobs
 
-新增 jobs store：
+Add a jobs store:
 
 ```text
 workspace/jobs/
@@ -538,7 +575,7 @@ workspace/jobs/
 └── mcp_<id>.log
 ```
 
-Job record：
+Job record:
 
 ```json
 {
@@ -553,7 +590,7 @@ Job record：
 }
 ```
 
-命令：
+Commands:
 
 ```text
 /ps
@@ -562,210 +599,229 @@ Job record：
 
 ## 16. Artifacts And Runs
 
-必须保持概念分离：
+Keep concepts separate:
 
-| 概念 | 存储 | 用途 |
+| Concept | Storage | Purpose |
 |---|---|---|
-| Tool Log | `logs/tool-log.jsonl` | 操作审计和 UI 摘要 |
-| Job Log | `jobs/*.log` | 长任务 stdout/stderr |
-| Run Manifest | `runs/<run_id>/manifest.json` | 科学或工具产物证据 |
-| Artifact | reports/metrics/figures/logs | 用户可引用产物 |
+| Tool Log | `logs/tool-log.jsonl` | Operation audit and UI summary |
+| Job Log | `jobs/*.log` | Long-task stdout/stderr |
+| Run Manifest | `runs/<run_id>/manifest.json` | Scientific or tool artifact evidence |
+| Artifact | reports/metrics/figures/logs | User-citable output |
 
-`/runs` 只显示 run manifest。
+`/runs` shows run manifests only.
 
-已实现：`/runs` 和 `/artifacts <run_id>` 展示 artifact type、hash、producer MCP、关键 metric references、lineage、approval decision 等证据摘要，但仍不在 Chat 主视图直接铺开大 JSON 或大报告。
+Implemented behavior: `/runs` and `/artifacts <run_id>` show evidence summaries
+including artifact type, hash, producer MCP, key metric references, lineage, and
+approval decisions. They still do not expand large JSON or long reports in the
+main Chat view.
 
-`/ps` 显示后台 job。
+`/ps` shows background jobs.
 
-`/tool-log` 后续可显示工具审计。
+`/tool-log` can show tool audit history.
 
-`/raw [last|call_id]` 显示已持久化的原始 tool result。默认选择最近一个带 raw result 的 tool log entry；MCP tool result 和大输出 tool result 会写入 `logs/raw-tool-results/`，避免原始 JSON 直接铺满 Chat。
+`/raw [last|call_id]` displays persisted raw tool results. By default it selects
+the latest tool-log entry that has a raw result. MCP results and large-output
+tool results are written to `logs/raw-tool-results/` so raw JSON does not flood
+Chat.
 
-带 raw result 的 MCP tool call 会同步登记为已结束的 `mcp` job，log path 指向同一个 raw result 文件。TUI 不自动把任意 MCP call 转为后台运行；真正的后台/可停止 MCP 长任务需要 MCP server 自身提供异步 job 语义。
+An MCP tool call with a raw result is also registered as a completed `mcp` job
+whose log path points to the same raw result file. The TUI does not
+automatically turn every MCP call into a background task. True background or
+stoppable MCP long tasks require async job semantics from the MCP server itself.
 
 ## 17. Approval Requirements
 
-审批必须具备：
+Approvals must include:
 
-- 操作类型。
-- 目标。
-- 参数摘要。
-- 风险等级。
-- approval id。
-- 可复制文本命令。
-- 键盘操作提示。
+- Action type.
+- Target.
+- Argument summary.
+- Risk level.
+- Approval id.
+- Copyable text commands.
+- Keyboard hints.
 
-显示示例：
+Display example:
 
 ```text
 Approval Required
 apr_xxx [medium]
 Action: MCP Tool Call
 Target: mcp_agentic-file-search_agentic_explore
-Args: {"task": "查看数据库情况"}
+Args: {"task": "check database status"}
 
 > Approve          Enter / Ctrl-Y / F2
   Reject           Esc / Ctrl-N / F3
   Request changes  F4
 ```
 
-规则：
+Rules:
 
-- 审批结果写入 `workspace/approvals/decisions.jsonl`。
-- pending 写入 `workspace/approvals/pending.jsonl`。
-- TUI 重启后自动加载。
-- approval pane 显示 pending；无 pending 时显示最近 decisions。
+- Approval decisions are written to `workspace/approvals/decisions.jsonl`.
+- Pending approvals are written to `workspace/approvals/pending.jsonl`.
+- The TUI loads them after restart.
+- The approval pane shows pending approvals; when none are pending, it shows
+  recent decisions.
 
 ## 18. Security And Permissions
 
-TUI 不能绕过 runtime 工具策略。
+The TUI must not bypass runtime tool policy.
 
-要求：
+Requirements:
 
-- exec 白名单由 config 控制。
-- `!<cmd>` 是显式终端模式例外：它不走 agent tool policy，适合用户主动把 TUI 当本地 shell 用。
-- read-only 泛化命令必须经过 shell 安全解析。
-- 包含 `>`, `>>`, `<`, pipe, `;`, `&&`, `||`, `$()`, backtick 等 shell 结构时必须逐段判断。
-- 不能因为命令首 token 是 `ls`、`cat`、`echo` 就放行整条 shell。
-- MCP tool allowlist 由 config 控制。
-- 写文件、删除文件、高成本任务默认审批。
+- Exec allowlists are controlled by config.
+- `!<cmd>` is the explicit terminal-mode exception. It does not use agent tool
+  policy and is intended for users who actively use the TUI as a local shell.
+- Read-only generalized commands must be parsed safely as shell commands.
+- Shell structures such as `>`, `>>`, `<`, pipes, `;`, `&&`, `||`, `$()`, and
+  backticks must be evaluated segment by segment.
+- Do not allow an entire shell string just because its first token is `ls`,
+  `cat`, or `echo`.
+- MCP tool allowlists are controlled by config.
+- File writes, deletes, and high-cost tasks require approval by default.
 
 ## 19. Streaming
 
-TUI 应支持流式显示 assistant 回复。
+The TUI should stream assistant replies.
 
-规则：
+Rules:
 
-- 短文本可以直接增量显示。
-- Markdown 渲染可以阶段性刷新，但不能造成 ANSI 样式泄漏。
-- 长 tool result 默认总结后进入 Chat，完整内容进 pager/log/artifact。
-- MCP 原始 JSON 不应直接铺满 Chat，除非用户明确使用 `/raw` 查看。
+- Short text can be displayed incrementally.
+- Markdown rendering can refresh periodically, but must not leak ANSI styling.
+- Long tool results enter Chat as summaries; full content goes to pager, log, or
+  artifact.
+- Raw MCP JSON should not fill Chat unless the user explicitly views it with
+  `/raw`.
 
 ## 20. Persistence
 
-TUI 重启后应恢复：
+After restart, the TUI should restore:
 
-- 最近 chat session。
-- pending approvals。
-- recent approval decisions。
-- tool log。
-- jobs。
-- artifacts。
-- campaign status。
-- workspace-local UI preferences such as active layout.
+- Recent chat session.
+- Pending approvals.
+- Recent approval decisions.
+- Tool log.
+- Jobs.
+- Artifacts.
+- Campaign status.
+- Workspace-local UI preferences, such as active layout.
 
-不要求恢复：
+It does not need to restore:
 
-- 已关闭 overlay。
-- 临时 slash menu 状态。
-- 输入框未提交内容，首版可不恢复。
+- Closed overlays.
+- Temporary slash-menu state.
+- Unsubmitted input buffer, at least in the first version.
 
 ## 21. Testing
 
-需要测试：
+Tests needed:
 
 ### 21.1 Unit Tests
 
-- command registry metadata。
-- command dispatch 优先级。
-- local slash command 不进入 agent。
-- unknown slash command 不进入 agent。
-- running task command gating。
-- approval overlay key handling。
-- Esc reject。
-- Enter approve。
-- input history。
-- slash completion。
-- layout render smoke。
+- Command registry metadata.
+- Command-dispatch priority.
+- Local slash commands do not enter the agent.
+- Unknown slash commands do not enter the agent.
+- Running-task command gating.
+- Approval overlay key handling.
+- Esc reject.
+- Enter approve.
+- Input history.
+- Slash completion.
+- Layout render smoke.
 
 ### 21.2 Integration Tests
 
-- `/runs` 显示 ArtifactIndex run manifest。
-- `/artifacts <run_id>` 显示 artifact。
-- `/ps` 显示后台 job。
-- `/stop <job_id>` 停止后台 job。
-- pending approval TUI 重启后仍显示。
-- tool log TUI 重启后仍显示。
-- long exec 不阻塞新输入。
+- `/runs` displays ArtifactIndex run manifests.
+- `/artifacts <run_id>` displays artifacts.
+- `/ps` displays background jobs.
+- `/stop <job_id>` stops background jobs.
+- Pending approvals still display after TUI restart.
+- Tool log still displays after TUI restart.
+- Long exec does not block new input.
 
 ### 21.3 Visual Smoke
 
-低优先级人工验证。适合 release 前检查，不作为当前开发阻塞项。
+Low-priority manual validation, suitable before a release and not a current
+development blocker.
 
-- 宽终端。
-- 窄终端。
-- VS Code terminal。
-- 普通 terminal。
-- `--once` snapshot。
+- Wide terminal.
+- Narrow terminal.
+- VS Code terminal.
+- Standard terminal.
+- `--once` snapshot.
 
 ## 22. Migration Plan
 
 ### Phase 1: Command Registry
 
-- 新建 `tui/commands/registry.py`。
-- 将 `_TUI_SLASH_COMMANDS` 迁移为 registry。
-- 保留旧 import facade。
-- 补测试。
+- Create `tui/commands/registry.py`.
+- Move `_TUI_SLASH_COMMANDS` into the registry.
+- Keep the old import facade.
+- Add tests.
 
 ### Phase 2: Dispatcher
 
-- 新建 `tui/commands/dispatcher.py`。
-- 明确 local / overlay / approval / agent / session。
-- `/status`、`/runs`、`/artifacts`、`/approvals`、`/ps`、`/stop` 变成 immediate local。
-- 未知 slash command 不进模型。
+- Create `tui/commands/dispatcher.py`.
+- Explicitly separate local, overlay, approval, agent, and session dispatch.
+- Make `/status`, `/runs`, `/artifacts`, `/approvals`, `/ps`, and `/stop`
+  immediate local commands.
+- Keep unknown slash commands out of the model.
 
 ### Phase 3: Input Controller
 
-- 新建 `tui/input/composer.py`。
-- 统一 Enter、Esc、Up、Down、PgUp、PgDn、pager shortcut。
-- 支持 `tui.keymap` 覆盖默认快捷键，并让 footer/overlay/help 文案显示解析后的实际按键。
-- slash popup 和 history 行为对齐 Codex。
+- Create `tui/input/composer.py`.
+- Normalize Enter, Esc, Up, Down, PgUp, PgDn, and pager shortcut behavior.
+- Support `tui.keymap` overrides for default shortcuts and make footer, overlay,
+  and help text show the resolved keys.
+- Align slash popup and history behavior with Codex.
 
 ### Phase 4: Overlay Stack
 
-- 新建 `tui/overlays/`。
-- approval、pager、picker 迁移为 overlay。
-- Esc 语义按 overlay 类型处理。
+- Create `tui/overlays/`.
+- Move approval, pager, and picker behavior into overlays.
+- Apply Esc semantics by overlay type.
 
 ### Phase 5: LayoutSpec
 
-- 新建 `tui/layouts/` 和 `tui/views/`。
-- 当前 layout 改名 `four_pane`。
-- render 层只组合 view，不处理业务逻辑。
+- Create `tui/layouts/` and `tui/views/`.
+- Rename the current layout to `four_pane`.
+- Let render code compose views without handling business logic.
 
 ### Phase 6: Jobs And Tool Log Polish
 
-- jobs store 一等公民。
-- `/ps`、`/stop <job_id>`。
-- tool log pager。
-- 后台任务状态刷新。
+- Make the jobs store a first-class concept.
+- Implement `/ps` and `/stop <job_id>`.
+- Add the tool-log pager.
+- Refresh background task status.
 
 ## 23. Acceptance Criteria
 
-1. `/runs`、`/artifacts`、`/status`、`/approvals` 不会进入模型。
-2. 任务运行中 `/status`、`/runs`、`/ps`、`/stop` 立即响应。
-3. pending approval 出现时，Enter approve、Esc reject 可用。
-4. `/approve <id>`、`/reject <id>` 仍可用。
-5. slash menu 支持方向键选择和 Enter 确认。
-6. 输入框 Up/Down 历史稳定可用。
-7. 长输出不会污染 Chat 主视图。
-8. 后台任务不会阻塞 TUI 输入。
-9. Tool Log 自动显示最新条目。
-10. `/raw` 可查看已持久化的 MCP 或大输出 tool result。
-11. TUI 重启后加载 approvals、tool log、jobs。
-12. 默认四窗格 UI 保持可用。
-13. 新 layout 可以不改 command/input/overlay 逻辑。
+1. `/runs`, `/artifacts`, `/status`, and `/approvals` never enter the model.
+2. `/status`, `/runs`, `/ps`, and `/stop` respond immediately while a task is
+   running.
+3. When a pending approval appears, Enter approves and Esc rejects.
+4. `/approve <id>` and `/reject <id>` still work.
+5. The slash menu supports arrow-key selection and Enter confirmation.
+6. Up/Down input history remains stable.
+7. Long output does not pollute the main Chat view.
+8. Background tasks do not block TUI input.
+9. Tool Log automatically shows the newest entries.
+10. `/raw` can view persisted MCP or large-output tool results.
+11. The TUI loads approvals, tool log, and jobs after restart.
+12. The default four-pane UI remains usable.
+13. New layouts can be added without changing command/input/overlay logic.
 
 ## 24. Risks
 
-| 风险 | 缓解 |
+| Risk | Mitigation |
 |---|---|
-| 一次性大重构破坏已有 TUI | 分 phase，保留 facade 和测试 |
-| prompt_toolkit ANSI 渲染再次泄漏 | 避免先 ANSI 后切片；关键区域使用 Rich renderable 或安全 reset |
-| local command 和 agent command 边界混乱 | registry 强制声明 dispatch kind |
-| 长任务状态不一致 | jobs store 持久化，启动时 reconcile |
-| layout 抽象过度 | 首版只实现 `four_pane`，接口预留 |
-| approval UX 和远程审批冲突 | overlay 和 slash command 同时保留 |
+| Large refactor breaks the existing TUI | Move in phases and keep facades plus tests |
+| `prompt_toolkit` ANSI rendering leaks again | Avoid ANSI-then-slice rendering; use Rich renderables or safe resets in key regions |
+| Local and agent command boundaries blur | Registry requires an explicit dispatch kind |
+| Long-task state becomes inconsistent | Persist jobs and reconcile on startup |
+| Layout abstraction becomes overbuilt | Implement only `four_pane` first while reserving the interface |
+| Approval UX conflicts with remote approval | Keep both overlay and slash-command paths |
 
 ## 25. Open Questions
 

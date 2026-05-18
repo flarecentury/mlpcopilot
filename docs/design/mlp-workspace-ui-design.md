@@ -1,27 +1,36 @@
 # MLP Workspace and UI Design
 
-本文记录 MLP 主动学习工作流下的 workspace 目录设计，以及 TUI 中 `Artifacts` 和 `Companion` 两块区域的设计约定。
+This document records workspace directory design for MLP active-learning
+workflows, plus design conventions for the TUI `Artifacts` and `Companion`
+areas.
 
-设计边界：
+Design boundaries:
 
-- `mlpcopilot` runtime 只负责 workspace、session、approval、artifact index、UI 状态和 MCP/skill 接入。
-- MLP/DP-GEN/DeepMD-kit 的具体科学流程由 MCP server 和 skill 实现。
-- runtime core 不直接实现数据集验证、模型推理、benchmark、主动学习策略或科学判断。
-- 大型科学数据通过文件路径、artifact id、object id 引用，不直接塞进 LLM 上下文。
-- 指标和状态必须来自工具产物和 artifact metadata，不能由 LLM 从聊天历史推断。
-- backend 原生工作目录应保持原样，runtime 通过 adapter/projector 将其投影成通用 project/run/iteration/artifact 状态。
+- The `mlpcopilot` runtime owns only workspace state, sessions, approvals,
+  artifact indexing, UI state, and MCP/skill integration.
+- MLP, DP-GEN, and DeepMD-kit scientific workflows are implemented by MCP
+  servers and skills.
+- Runtime core does not directly implement dataset validation, model inference,
+  benchmarks, active-learning strategy, or scientific judgment.
+- Large scientific data moves through file paths, artifact ids, or object ids;
+  it is not pasted into LLM context.
+- Metrics and status must come from tool artifacts and artifact metadata, not
+  from LLM inference over chat history.
+- Backend-native working directories should remain intact. The runtime projects
+  them through an adapter/projector into normalized project, run, iteration, and
+  artifact state.
 
-## 1. Workspace 总体结构
+## 1. Workspace Structure
 
-推荐 workspace 分成三类状态：
+Recommended workspace state groups:
 
-| 类型 | 是否跨 session | 职责 |
+| Type | Cross-session | Responsibility |
 | --- | --- | --- |
-| runtime state | 部分跨 session | chat、tool log、approval、memory、TUI 状态 |
-| project state | 跨 session | 项目、数据清单、checkpoint、计划、当前 run |
-| run/artifact state | 跨 session | 主动学习运行、iteration、产物、证据链 |
+| runtime state | Partly | Chat, tool log, approvals, memory, TUI state |
+| project state | Yes | Project, data inventory, checkpoints, plans, active run |
+| run/artifact state | Yes | Active-learning runs, iterations, artifacts, evidence chain |
 
-推荐结构：
+Recommended structure:
 
 ```text
 ~/.mlpcopilot/workspace/
@@ -97,36 +106,47 @@
     blobs/
 ```
 
-## 2. Project、Run、Iteration 的语义
+## 2. Project, Run, And Iteration Semantics
 
-推荐语义：
+Recommended semantics:
 
-| 层级 | 语义 | 示例 |
+| Level | Semantics | Example |
 | --- | --- | --- |
-| project | 一个长期 MLP 项目或体系任务 | Fe-C-H 势函数开发 |
-| run | 一次具体主动学习/训练/验证执行 | 使用某套阈值和机器配置跑 DP-GEN 风格 AL |
-| iteration | run 内的一轮通用阶段视图 | `iter_000003` |
-| artifact | 某一步产生的文件、指标、报告或审批证据 | model deviation summary、label task batch |
+| project | A long-lived MLP project or system task | Fe-C-H potential development |
+| run | One concrete active-learning, training, or validation execution | A DP-GEN-style AL run with one threshold and machine configuration |
+| iteration | One normalized round inside a run | `iter_000003` |
+| artifact | A file, metric, report, or approval evidence produced by a step | model deviation summary, label task batch |
 
-通用 `iterations` 记录应该放在 `projects/<project_id>/runs/<run_id>/iterations/` 下，而不是直接放在 `projects/<project_id>/iterations/` 下。
+Normalized `iterations` records should live under
+`projects/<project_id>/runs/<run_id>/iterations/`, not directly under
+`projects/<project_id>/iterations/`.
 
-backend 原生 iteration 目录应放在 `projects/<project_id>/runs/<run_id>/backend/<backend_name>/` 下。例如 DP-GEN 使用 `iter.000000`、`iter.000001`，不应强制改成 `iter_000000/train/explore/label`。
+Backend-native iteration directories should live under
+`projects/<project_id>/runs/<run_id>/backend/<backend_name>/`. For example,
+DP-GEN uses `iter.000000` and `iter.000001`; these should not be forced into a
+physical `iter_000000/train/explore/label` layout.
 
-原因：
+Reasons:
 
-- 同一个 project 可以有多次主动学习 run，每个 run 都可能从 `iter_000000` 开始。
-- reset、retry、分支实验、对比实验都需要保留 run 上下文。
-- iteration 依赖对应 run 的 controller config、selection threshold、model committee、机器配置和审批记录。
-- artifact lineage 需要能明确回溯到具体 run 和 iteration。
-- DP-GEN 等 backend 对当前工作目录、`record.dpgen` 和 `iter.??????` 目录有原生假设，runtime 不应破坏这些假设。
+- The same project can have multiple active-learning runs, and each run may
+  start from `iter_000000`.
+- Reset, retry, alternate experiment lines, and comparison experiments all need
+  run context.
+- Iterations depend on the corresponding run's controller config, selection
+  thresholds, model committee, machine config, and approval records.
+- Artifact lineage must trace back to a concrete run and iteration.
+- Backends such as DP-GEN have native assumptions about current working
+  directory, `record.dpgen`, and `iter.??????` directories. The runtime should
+  not break those assumptions.
 
-如果 UI 需要项目级 iteration 总览，可以额外维护索引视图：
+If the UI needs a project-level iteration overview, maintain an additional index
+view:
 
 ```text
 projects/<project_id>/iteration_index.jsonl
 ```
 
-示例：
+Example:
 
 ```json
 {
@@ -138,71 +158,75 @@ projects/<project_id>/iteration_index.jsonl
 }
 ```
 
-结论：
+Conclusion:
 
-- 通用 iteration metadata 挂在 run 下。
-- backend 原生 iteration workdir 挂在 `runs/<run_id>/backend/<backend_name>/` 下。
-- iteration 视图上可以按 project 聚合。
+- Normalized iteration metadata belongs under the run.
+- Backend-native iteration workdirs belong under
+  `runs/<run_id>/backend/<backend_name>/`.
+- Iteration views may aggregate by project.
 
 ## 3. Runtime State
 
 ### 3.1 sessions
 
-`sessions/` 保存 TUI/API 会话历史。
+`sessions/` stores TUI/API session history.
 
-要求：
+Requirements:
 
-- `/new` 应创建新的 session。
-- chat history 默认属于当前 session。
-- 关闭后重新进入同一 root session 时，应恢复最近 active session。
-- 不应该从旧 session history 推断当前 skills、MCP 或项目状态。
+- `/new` creates a new session.
+- Chat history belongs to the current session by default.
+- Re-entering the same root session should restore the latest active session.
+- Current skills, MCP state, and project state must not be inferred from old
+  session history.
 
 ### 3.2 logs
 
-`logs/` 保存 runtime 工具调用日志。
+`logs/` stores runtime tool-call logs.
 
-要求：
+Requirements:
 
-- tool log 应 session-scoped。
-- 新 session 应有新的 tool log。
-- runtime tool log 和 MLP 训练日志分开。
-- 训练日志应作为 project/run/iteration artifact 注册。
+- Tool logs are session-scoped.
+- New sessions get new tool logs.
+- Runtime tool logs are separate from MLP training logs.
+- Training logs are registered as project/run/iteration artifacts.
 
 ### 3.3 approvals
 
-`approvals/` 保存人类审批状态。
+`approvals/` stores human approval state.
 
-要求：
+Requirements:
 
-- approval 应 session-scoped 或 run-scoped，具体取决于审批对象。
-- 危险操作必须阻塞等待审批。
-- 审批结果应持久化，并可作为 artifact evidence 引用。
+- Approvals are session-scoped or run-scoped depending on the approval object.
+- Dangerous operations must block while waiting for approval.
+- Approval decisions are persisted and can be referenced as artifact evidence.
 
-典型审批对象：
+Typical approval objects:
 
-- 启动训练 run。
-- 停止/重置 run。
-- 提交 label/DFT 任务。
-- 覆盖已有 controller 配置。
-- 删除或归档 run 产物。
+- Start a training run.
+- Stop or reset a run.
+- Submit label or DFT tasks.
+- Overwrite existing controller config.
+- Delete or archive run artifacts.
 
 ### 3.4 memory
 
-`memory/` 保存长期偏好和稳定事实。
+`memory/` stores long-term preferences and stable facts.
 
-要求：
+Requirements:
 
-- memory 可以跨 session 共享。
-- memory 不能作为当前 skill inventory、MCP inventory、active project、active run 的权威来源。
-- 当前状态必须以 workspace state、runtime config 和 loader inventory 为准。
+- Memory may be shared across sessions.
+- Memory is not authoritative for current skill inventory, MCP inventory, active
+  project, or active run.
+- Current state must come from workspace state, runtime config, and loader
+  inventory.
 
 ## 4. Project State
 
 ### 4.1 project.json
 
-`project.json` 保存项目级稳定信息。
+`project.json` stores stable project-level information.
 
-示例：
+Example:
 
 ```json
 {
@@ -218,37 +242,39 @@ projects/<project_id>/iteration_index.jsonl
 
 ### 4.2 inventory
 
-`inventory/` 保存项目级资源清单。
+`inventory/` stores project-level resource inventories.
 
-推荐文件：
+Recommended files:
 
-| 文件 | 内容 |
+| File | Contents |
 | --- | --- |
-| `datasets.jsonl` | 已有训练集、验证集、label 数据集 |
-| `structures.jsonl` | 结构池、候选构型、未标注构型 |
-| `checkpoints.jsonl` | 模型 checkpoint、frozen model、committee 成员 |
-| `reference_data.jsonl` | DFT/reference 数据和计算设置 |
-| `compute_resources.jsonl` | 本地/集群/队列/容器资源 |
+| `datasets.jsonl` | Existing training, validation, and labeled datasets |
+| `structures.jsonl` | Structure pools, candidate configurations, unlabeled configurations |
+| `checkpoints.jsonl` | Model checkpoints, frozen models, committee members |
+| `reference_data.jsonl` | DFT/reference data and calculation settings |
+| `compute_resources.jsonl` | Local, cluster, queue, and container resources |
 
-inventory 只保存 metadata 和路径，不保存大型坐标正文。
+Inventory stores metadata and paths only. It does not store large coordinate
+payloads.
 
 ### 4.3 plans
 
-`plans/` 保存主动学习计划和验证计划。
+`plans/` stores active-learning plans and validation plans.
 
-要求：
+Requirements:
 
-- plan 是意图和执行方案，不是运行状态。
-- plan 可以由 skill 生成或修改。
-- 执行时应复制或引用到具体 run 中，避免计划变更污染历史 run。
+- A plan is intent and execution design, not run state.
+- A skill may generate or modify a plan.
+- At execution time, the plan should be copied or referenced into the concrete
+  run so later plan edits do not contaminate run history.
 
 ## 5. Run State
 
 ### 5.1 run.json
 
-`run.json` 保存一次运行的不可变或半稳定元信息。
+`run.json` stores immutable or semi-stable metadata for one run.
 
-示例：
+Example:
 
 ```json
 {
@@ -262,17 +288,20 @@ inventory 只保存 metadata 和路径，不保存大型坐标正文。
 }
 ```
 
-注意：
+Notes:
 
-- `backend` 可以是 `dpgen`，但目录和 runtime 接口不要绑定 DP-GEN。
-- `controller_type` 使用通用名称，方便未来支持其他主动学习控制器。
-- backend 原生运行目录由 `backend_workdir` 或约定路径定位，例如 `backend/dpgen`。
+- `backend` may be `dpgen`, but directory and runtime interfaces should not be
+  bound to DP-GEN.
+- `controller_type` uses a generic name so future active-learning controllers
+  can be supported.
+- The backend-native run directory is located through `backend_workdir` or a
+  convention such as `backend/dpgen`.
 
 ### 5.2 run_state.json
 
-`run_state.json` 保存当前运行状态。
+`run_state.json` stores current run state.
 
-示例：
+Example:
 
 ```json
 {
@@ -286,27 +315,32 @@ inventory 只保存 metadata 和路径，不保存大型坐标正文。
 
 ### 5.3 controller
 
-`controller/` 保存控制器输入和渲染结果。
+`controller/` stores controller inputs and rendered results.
 
-推荐内容：
+Recommended contents:
 
-- `controller.json`: runtime/MCP 通用控制器配置。
-- `generated_param.json`: 由工具生成的训练/主动学习参数。
-- `generated_machine.json`: 由工具生成的机器/队列配置。
-- `rendered_inputs/`: 后端实际使用的输入文件。
-- `submit_scripts/`: 后端提交脚本。
+- `controller.json`: runtime/MCP generic controller config.
+- `generated_param.json`: training or active-learning parameters generated by a
+  tool.
+- `generated_machine.json`: machine or queue configuration generated by a tool.
+- `rendered_inputs/`: input files actually consumed by the backend.
+- `submit_scripts/`: backend submit scripts.
 
-命名原则：
+Naming principles:
 
-- runtime 目录名用 `controller`。
-- 后端特定文件可以保留原始文件名，例如 DP-GEN 的 `param.json`、`machine.json`。
-- 不把顶层目录命名为 `dpgen`，避免未来迁移成本。
+- Use `controller` for the runtime directory name.
+- Backend-specific files may keep their native names, such as DP-GEN
+  `param.json` and `machine.json`.
+- Do not name the top-level directory `dpgen`; that would make future migration
+  harder.
 
 ### 5.4 backend
 
-`backend/` 保存后端原生工作目录。该目录是后端工具的执行根目录，不要求符合 MLP Copilot 的通用 iteration 目录命名。
+`backend/` stores the backend-native working directory. This directory is the
+execution root for backend tools and does not need to follow MLP Copilot's
+normalized iteration naming.
 
-DP-GEN 推荐结构：
+Recommended DP-GEN structure:
 
 ```text
 projects/<project_id>/runs/<run_id>/backend/dpgen/
@@ -321,18 +355,22 @@ projects/<project_id>/runs/<run_id>/backend/dpgen/
   iter.000002/
 ```
 
-设计要求：
+Design requirements:
 
-- DP-GEN 应在 `backend/dpgen/` 作为 cwd 运行。
-- `param.json` 和 `machine.json` 保留 DP-GEN 原生命名。
-- `record.dpgen` 是 DP-GEN 断点续跑和状态解析的重要输入。
-- `iter.??????/00.train`、`iter.??????/01.model_devi`、`iter.??????/02.fp` 保持原样。
-- runtime 不直接改写 DP-GEN 的 iteration 目录。
-- projector/adapter 将 DP-GEN 原生目录投影成通用 iteration、artifact 和 companion 状态。
+- DP-GEN should run with `backend/dpgen/` as cwd.
+- `param.json` and `machine.json` keep DP-GEN native names.
+- `record.dpgen` is an important input for DP-GEN resume and state parsing.
+- `iter.??????/00.train`, `iter.??????/01.model_devi`, and
+  `iter.??????/02.fp` remain unchanged.
+- Runtime does not directly rewrite DP-GEN iteration directories.
+- A projector/adapter maps DP-GEN native directories into normalized iteration,
+  artifact, and companion state.
 
-### 5.5 DP-GEN phase 映射
+### 5.5 DP-GEN Phase Mapping
 
-DP-GEN `run_iter(param_file, machine_file)` 每轮包含 9 个 task。通用 phase 应作为投影视图，而不是直接改变 DP-GEN 物理目录。
+DP-GEN `run_iter(param_file, machine_file)` contains nine tasks per round. The
+normalized phase should be a projected view and should not change physical
+DP-GEN directories.
 
 | MLP Copilot phase | DP-GEN task | DP-GEN directory |
 | --- | ---: | --- |
@@ -346,7 +384,7 @@ DP-GEN `run_iter(param_file, machine_file)` 每轮包含 9 个 task。通用 pha
 | `label.run` | 7 `run_fp` | `iter.??????/02.fp` |
 | `label.collect` | 8 `post_fp` | `iter.??????/02.fp` |
 
-状态解析建议：
+Suggested state parsing:
 
 ```text
 read backend/dpgen/record.dpgen
@@ -356,13 +394,14 @@ read backend/dpgen/record.dpgen
   -> write run_state.json, artifacts.jsonl, ui/*.state.json
 ```
 
-DP-GEN 适配器应只做目录解析、状态映射和 artifact/event 注册，不做科学判断。
+The DP-GEN adapter should only parse directories, map state, and register
+artifacts/events. It must not make scientific judgments.
 
-## 6. Artifact 设计
+## 6. Artifact Design
 
-Artifact 是 workspace 中的证据对象，不是普通文件列表。
+An artifact is an evidence object in the workspace, not a plain file-list entry.
 
-推荐 schema：
+Recommended schema:
 
 ```json
 {
@@ -390,49 +429,50 @@ Artifact 是 workspace 中的证据对象，不是普通文件列表。
 }
 ```
 
-推荐 `kind`：
+Recommended `kind` values:
 
-| kind | 示例 |
+| kind | Example |
 | --- | --- |
-| `config` | controller config、param、machine |
-| `dataset` | DeepMD npy 数据、raw labeled data |
+| `config` | controller config, param, machine |
+| `dataset` | DeepMD npy data, raw labeled data |
 | `structure_pool` | exploration candidate structures |
-| `model_checkpoint` | frozen model、checkpoint |
-| `training_metric` | loss curve、validation metric |
-| `model_deviation` | committee deviation 结果 |
-| `label_task` | DFT labeling 输入任务 |
-| `reference_result` | DFT/reference 输出 |
-| `report` | run report、failure report |
-| `log` | controller/train/label 日志 |
-| `decision` | 人类审批、接受/拒绝原因 |
-| `run_record` | backend 断点续跑和阶段记录，例如 `record.dpgen` |
-| `diagnostic` | failure analyzer 或 backend adapter 产出的诊断 |
+| `model_checkpoint` | frozen model, checkpoint |
+| `training_metric` | loss curve, validation metric |
+| `model_deviation` | committee deviation results |
+| `label_task` | DFT labeling input tasks |
+| `reference_result` | DFT/reference output |
+| `report` | run report, failure report |
+| `log` | controller, training, or labeling logs |
+| `decision` | human approval and accept/reject reason |
+| `run_record` | backend resume and phase record, such as `record.dpgen` |
+| `diagnostic` | diagnostic output from failure analyzer or backend adapter |
 
-推荐 `role`：
+Recommended `role` values:
 
-| role | 说明 |
+| role | Meaning |
 | --- | --- |
-| `input` | run 或 iteration 的输入 |
-| `output` | 工具生成的输出 |
-| `evidence` | 决策证据 |
-| `decision` | 人类审批或选择结果 |
-| `diagnostic` | 日志、错误分析、健康检查 |
-| `report` | 汇总报告 |
+| `input` | Input to a run or iteration |
+| `output` | Output generated by a tool |
+| `evidence` | Decision evidence |
+| `decision` | Human approval or selected outcome |
+| `diagnostic` | Logs, error analysis, health checks |
+| `report` | Summary report |
 
-## 7. Artifacts Pane 设计
+## 7. Artifacts Pane Design
 
-Artifacts pane 不应该是普通文件浏览器，而应该是当前 project/run 的证据链视图。
+The Artifacts pane should not be a plain file browser. It should be the evidence
+chain view for the current project/run.
 
-核心问题：
+Core questions:
 
-- 当前 run 有哪些关键产物？
-- 哪些产物是输入？
-- 哪些产物是新生成的？
-- 哪些产物决定下一步？
-- 哪些产物需要审批？
-- 哪些产物异常、缺失或过期？
+- What key artifacts exist for the current run?
+- Which artifacts are inputs?
+- Which artifacts were newly generated?
+- Which artifacts determine the next step?
+- Which artifacts require approval?
+- Which artifacts are abnormal, missing, or stale?
 
-推荐表格：
+Recommended table:
 
 ```text
 Kind        Scope          Status     Name                         Metrics
@@ -443,43 +483,44 @@ label       iter_000003    pending    DFT label batch               128 tasks
 report      run            ready      failure analysis              3 issues
 ```
 
-推荐操作：
+Recommended operations:
 
-| 操作 | 说明 |
+| Operation | Meaning |
 | --- | --- |
-| filter | 按 project、run、iteration、kind、status 过滤 |
-| inspect | 展开 metadata、路径、父子关系、指标摘要 |
-| attach | 将 artifact 摘要和路径加入当前 chat 上下文 |
-| lineage | 查看 artifact 的输入来源和派生产物 |
-| approval | 对危险操作关联审批 |
-| open path | 展示路径或小文件摘要，不加载大文件正文 |
-| health flags | 显示缺文件、checksum 变化、指标异常、未审批、过期 |
+| filter | Filter by project, run, iteration, kind, status |
+| inspect | Expand metadata, paths, parent/child links, and metric summaries |
+| attach | Add artifact summary and path to current chat context |
+| lineage | View artifact inputs and derived artifacts |
+| approval | Link dangerous operations to approvals |
+| open path | Show path or small-file summary without loading large file contents |
+| health flags | Show missing files, checksum changes, metric anomalies, unapproved state, stale state |
 
-Artifacts pane 的数据来源：
+Data sources for the Artifacts pane:
 
 - `projects/<project_id>/runs/<run_id>/artifacts.jsonl`
 - `projects/<project_id>/runs/<run_id>/iterations/<iteration_id>.json`
-- 全局 `artifacts/artifacts.jsonl` 或 `artifacts/artifacts.duckdb`
-- backend 原生目录经过 projector 后注册的 artifact records
+- Global `artifacts/artifacts.jsonl` or `artifacts/artifacts.duckdb`
+- Artifact records registered by a projector from backend-native directories
 
-优先级：
+Priority:
 
-1. 当前 active project。
-2. 当前 active run。
-3. 当前 active iteration。
-4. 用户筛选条件。
+1. Current active project.
+2. Current active run.
+3. Current active iteration.
+4. User filters.
 
-Artifacts pane 不应从 chat history 或 memory 猜 artifact。
+The Artifacts pane must not infer artifacts from chat history or memory.
 
-## 8. Companion Pane 设计
+## 8. Companion Pane Design
 
-Companion pane 是 deterministic project/run side panel，不是第二个 agent。
+The Companion pane is a deterministic project/run side panel, not a second
+agent.
 
-它应该从 workspace state 渲染，不从聊天历史推断。
+It should render from workspace state, not infer from chat history.
 
-可以替换或扩展当前 TUI 中的 `Campaign` 区域。
+It may replace or extend the current TUI `Campaign` area.
 
-推荐显示：
+Recommended display:
 
 ```text
 Project
@@ -509,60 +550,63 @@ Suggested Next
   3. generate iteration report
 ```
 
-推荐字段：
+Recommended fields:
 
-| 字段 | 来源 |
+| Field | Source |
 | --- | --- |
 | project | `project.json` |
-| goal | `project.json` 或 active plan |
+| goal | `project.json` or active plan |
 | active run | `project.json.active_run_id` |
 | stage | `run_state.json` |
-| blocking item | `approvals.jsonl`、controller status、artifact status |
-| health | MCP status、artifact index、run_state、latest diagnostics |
-| suggested next | skill 基于 state/artifact 生成，但必须可追溯 |
+| blocking item | `approvals.jsonl`, controller status, artifact status |
+| health | MCP status, artifact index, run state, latest diagnostics |
+| suggested next | Skill-generated from state/artifacts, with traceable source |
 
-Companion 需要区分两类建议：
+Companion must distinguish two suggestion types:
 
-| 类型 | 说明 |
+| Type | Meaning |
 | --- | --- |
-| deterministic next action | 从状态机直接推导，例如 approval pending |
-| advisory suggestion | skill 根据 artifact 摘要和计划生成，需要标注来源 |
+| deterministic next action | Derived directly from state machine, such as pending approval |
+| advisory suggestion | Generated by a skill from artifact summaries and plans, with source labels |
 
-Companion 不应该：
+Companion must not:
 
-- 从 memory/history 猜当前 skills。
-- 从 memory/history 猜当前 active run。
-- 直接判断科学结论。
-- 编造覆盖率、误差、收敛状态。
-- 自动执行危险操作。
+- Infer current skills from memory/history.
+- Infer current active run from memory/history.
+- Judge scientific conclusions directly.
+- Invent coverage, error, or convergence state.
+- Automatically run dangerous operations.
 
-## 9. UI 与 Workspace 的状态关系
+## 9. UI And Workspace State Relationship
 
-推荐状态来源：
+Recommended state sources:
 
-| UI 区域 | 权威数据源 |
+| UI area | Authoritative source |
 | --- | --- |
-| Chat | 当前 session history |
-| Tool Log | 当前 session tool log |
-| Artifacts | active project/run artifact index |
-| Approvals | current session approvals + run approvals |
-| Companion | project.json + run_state.json + artifacts + approvals |
-| Skills/MCP status | 当前 loader inventory 和 MCP registry |
+| Chat | Current session history |
+| Tool Log | Current session tool log |
+| Artifacts | Active project/run artifact index |
+| Approvals | Current session approvals plus run approvals |
+| Companion | `project.json` plus `run_state.json` plus artifacts plus approvals |
+| Skills/MCP status | Current loader inventory and MCP registry |
 
-重要规则：
+Important rules:
 
-- `memory` 可以共享。
-- `session/log` 应隔离。
-- `approval` 按对象决定 session-scoped 或 run-scoped。
-- `project/run/artifact` 应持久共享。
-- 当前 skills、MCP、active project、active run 必须来自当前 inventory/state。
-- UI 不应该从历史回答里恢复 runtime truth。
+- `memory` may be shared.
+- `session/log` should be isolated.
+- `approval` is session-scoped or run-scoped depending on the object.
+- `project/run/artifact` should be durable and shared.
+- Current skills, MCP, active project, and active run must come from current
+  inventory/state.
+- UI must not restore runtime truth from historical answers.
 
-## 10. UI Read Model 与自动刷新机制
+## 10. UI Read Model And Auto-Refresh
 
-`Artifacts` pane 和 `Companion` pane 建议采用自动刷新机制，但 UI 不直接读取后端运行目录、DP-GEN 目录或训练程序日志。
+`Artifacts` and `Companion` panes should use auto-refresh, but the UI should not
+directly read backend run directories, DP-GEN directories, or training-program
+logs.
 
-推荐架构：
+Recommended architecture:
 
 ```text
 MCP / backend tools
@@ -573,16 +617,19 @@ MCP / backend tools
   -> TUI panes auto-refresh
 ```
 
-核心规则：
+Core rules:
 
-- 后端/MCP 不直接驱动 UI。
-- 后端/MCP 只产出事实记录，例如 artifact、run event、approval event、diagnostic event。
-- 独立 `projector` 或 `reducer` 将事实记录投影成 UI read-model。
-- `Artifacts` pane 和 `Companion` pane 只消费 UI read-model 状态文件。
-- UI read-model 是可重建缓存，不是唯一 source of truth。
-- UI 不从 chat history 或 memory 推断当前 project、run、artifact、skill 或 MCP 状态。
+- Backend/MCP tools do not directly drive the UI.
+- Backend/MCP tools only produce factual records such as artifacts, run events,
+  approval events, and diagnostic events.
+- A separate `projector` or `reducer` projects factual records into UI read
+  models.
+- `Artifacts` and `Companion` panes consume only UI read-model state files.
+- UI read models are rebuildable caches, not the only source of truth.
+- UI does not infer current project, run, artifact, skill, or MCP state from
+  chat history or memory.
 
-推荐状态文件位置：
+Recommended state-file location:
 
 ```text
 projects/<project_id>/runs/<run_id>/ui/
@@ -590,7 +637,7 @@ projects/<project_id>/runs/<run_id>/ui/
   companion.state.json
 ```
 
-如果需要 project 级总览，可以增加：
+For project-level overviews, add:
 
 ```text
 projects/<project_id>/ui/
@@ -600,9 +647,10 @@ projects/<project_id>/ui/
 
 ### 10.1 artifacts.state.json
 
-`artifacts.state.json` 是给 UI 表格消费的 read-model，不等于完整 artifact ledger。
+`artifacts.state.json` is a read model for UI tables. It is not the complete
+artifact ledger.
 
-示例：
+Example:
 
 ```json
 {
@@ -634,19 +682,20 @@ projects/<project_id>/ui/
 }
 ```
 
-设计要求：
+Design requirements:
 
-- `revision` 单调递增，UI 用它判断是否刷新。
-- `schema_version` 必须存在，便于后续升级。
-- `source` 记录投影来源，方便排查 UI 状态是否滞后。
-- `rows` 只放 UI 需要的摘要字段。
-- 大型文件内容、完整日志、完整坐标数据不进入该文件。
+- `revision` increases monotonically so the UI can decide whether to refresh.
+- `schema_version` is required for future migration.
+- `source` records projection sources so stale UI state can be diagnosed.
+- `rows` contains only summary fields needed by the UI.
+- Large file contents, full logs, and full coordinate data do not enter this
+  file.
 
 ### 10.2 companion.state.json
 
-`companion.state.json` 是给 Companion pane 消费的状态摘要。
+`companion.state.json` is the status summary consumed by the Companion pane.
 
-示例：
+Example:
 
 ```json
 {
@@ -694,19 +743,22 @@ projects/<project_id>/ui/
 }
 ```
 
-设计要求：
+Design requirements:
 
-- Companion 是 deterministic side panel，不是第二个 agent。
-- `blocking_items` 必须可追溯到 approval、artifact、run event 或 diagnostic event。
-- `health` 必须来自工具状态、artifact metadata 或 run state。
-- `suggested_next` 可以来自 skill，但必须带 `source_artifact_id`、`approval_id`、`event_id` 或其他可追溯来源。
-- Companion 不直接判断科学结论，不编造覆盖率、误差或收敛状态。
+- Companion is a deterministic side panel, not a second agent.
+- `blocking_items` must trace to an approval, artifact, run event, or diagnostic
+  event.
+- `health` must come from tool status, artifact metadata, or run state.
+- `suggested_next` may come from a skill, but must include `source_artifact_id`,
+  `approval_id`, `event_id`, or another traceable source.
+- Companion does not directly judge scientific conclusions or invent coverage,
+  error, or convergence state.
 
 ### 10.3 Projector / Reducer
 
-`projector` 是后端事实记录到 UI read-model 的转换层。
+The `projector` converts backend factual records into UI read models.
 
-输入：
+Inputs:
 
 - `project.json`
 - `run.json`
@@ -716,33 +768,38 @@ projects/<project_id>/ui/
 - approval records
 - diagnostic records
 - MCP status records
-- backend-native status files，例如 DP-GEN 的 `record.dpgen`
-- backend-native iteration directories，例如 DP-GEN 的 `iter.??????`
+- backend-native status files, such as DP-GEN `record.dpgen`
+- backend-native iteration directories, such as DP-GEN `iter.??????`
 
-输出：
+Outputs:
 
 - `artifacts.state.json`
 - `companion.state.json`
 
-实现要求：
+Implementation requirements:
 
-- projector 不执行科学计算。
-- projector 不访问 DP-GEN/DeepMD-kit 的内部语义，除非这些语义已经被 MCP 转换成通用 artifact metadata。
-- projector 可以读取 backend 原生目录结构和状态锚点，例如 `record.dpgen`、`iter.??????/00.train`、`iter.??????/01.model_devi`、`iter.??????/02.fp`。
-- projector 可以被重新运行，并从 source of truth 重建 UI state。
-- projector 应保持 schema 稳定，方便 TUI、Web UI、API 复用。
+- The projector does not execute scientific computation.
+- The projector does not access DP-GEN/DeepMD-kit internal semantics unless those
+  semantics have already been converted into generic artifact metadata by an MCP
+  server.
+- The projector may read backend-native directory structure and state anchors
+  such as `record.dpgen`, `iter.??????/00.train`,
+  `iter.??????/01.model_devi`, and `iter.??????/02.fp`.
+- The projector can be rerun and rebuild UI state from source-of-truth records.
+- The projector keeps schemas stable so TUI, Web UI, and API consumers can reuse
+  them.
 
-### 10.4 自动刷新
+### 10.4 Auto-Refresh
 
-TUI 自动刷新建议使用 `mtime` 轮询或文件 watcher。
+TUI auto-refresh should use `mtime` polling or a file watcher.
 
-要求：
+Requirements:
 
-- UI 只读状态文件。
-- UI 根据 `revision` 判断是否需要重绘。
-- projector 写文件时必须使用原子写入。
+- UI reads state files only.
+- UI uses `revision` to decide whether redraw is needed.
+- Projectors write files atomically.
 
-推荐写入方式：
+Recommended write pattern:
 
 ```text
 write artifacts.state.json.tmp
@@ -750,46 +807,50 @@ fsync
 rename artifacts.state.json.tmp -> artifacts.state.json
 ```
 
-这样可以避免 UI 读到半截 JSON。
+This avoids the UI reading partial JSON.
 
-模块边界：
+Module boundaries:
 
-| 模块 | 职责 |
+| Module | Responsibility |
 | --- | --- |
-| MCP/backend | 产出事实记录和文件产物 |
-| ArtifactIndex | 保存 artifact ledger 和查询索引 |
-| ApprovalManager | 保存审批请求和决策 |
-| projector/reducer | 生成 UI read-model |
-| TUI panes | 读取 read-model 并渲染 |
-| skills | 生成计划、解释 workflow、给出可追溯建议 |
+| MCP/backend | Produce factual records and file artifacts |
+| ArtifactIndex | Store artifact ledger and query index |
+| ApprovalManager | Store approval requests and decisions |
+| projector/reducer | Generate UI read models |
+| TUI panes | Read read models and render |
+| skills | Generate plans, explain workflows, and provide traceable suggestions |
 
-这种设计的收益：
+Benefits:
 
-- backend 可替换。
-- projector 可替换。
-- TUI/Web UI/API 可以共用状态文件。
-- UI 不绑定 DP-GEN、DeepMD-kit、Slurm 或本地 runner。
-- read-model 可版本化、可重建、易调试。
+- Backend can be replaced.
+- Projector can be replaced.
+- TUI, Web UI, and API can share state files.
+- UI is not coupled to DP-GEN, DeepMD-kit, Slurm, or a local runner.
+- Read models are versioned, rebuildable, and easy to debug.
 
-## 11. 后续实现建议
+## 11. Follow-Up Implementation Advice
 
-建议分阶段实现：
+Suggested phases:
 
-1. 定义 workspace schema 和 project/run 初始化逻辑。
-2. 实现 ArtifactIndex 的 JSONL 后端。
-3. 定义 backend workdir 约定，例如 `runs/<run_id>/backend/dpgen/`。
-4. 定义 run event、approval event、diagnostic event 的最小 schema。
-5. 让现有 training controller MCP 输出 artifact records 和 event records。
-6. 实现 DP-GEN adapter/projector，读取 `record.dpgen` 和 `iter.??????`，生成通用状态。
-7. 实现通用 projector/reducer，生成 `artifacts.state.json` 和 `companion.state.json`。
-8. 将 Artifacts pane 从文件列表改为 artifact evidence table。
-9. 将 Campaign pane 替换为 Companion pane。
-10. 增加 project/run selector。
-11. 增加 artifact inspect/attach/lineage 操作。
+1. Define workspace schema and project/run initialization logic.
+2. Implement the JSONL backend for ArtifactIndex.
+3. Define backend workdir conventions, such as `runs/<run_id>/backend/dpgen/`.
+4. Define minimal schemas for run events, approval events, and diagnostic events.
+5. Make the existing training-controller MCP output artifact records and event
+   records.
+6. Implement a DP-GEN adapter/projector that reads `record.dpgen` and
+   `iter.??????`, then generates normalized state.
+7. Implement a generic projector/reducer that generates `artifacts.state.json`
+   and `companion.state.json`.
+8. Change the Artifacts pane from a file list into an artifact evidence table.
+9. Replace the Campaign pane with the Companion pane.
+10. Add project/run selector.
+11. Add artifact inspect/attach/lineage operations.
 
-实现边界：
+Implementation boundaries:
 
-- runtime 可以实现 `ArtifactIndex`、workspace schema、UI 渲染、审批绑定。
-- MCP 负责生成 MLP 领域 artifact 和 metrics。
-- skill 负责解释 workflow、生成计划和建议动作。
-- runtime 不实现 MLP 科学算法。
+- Runtime may implement `ArtifactIndex`, workspace schema, UI rendering, and
+  approval binding.
+- MCP servers generate MLP-domain artifacts and metrics.
+- Skills explain workflows, generate plans, and suggest actions.
+- Runtime does not implement MLP scientific algorithms.
