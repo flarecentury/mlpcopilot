@@ -79,6 +79,47 @@ class _FsTool(Tool):
     def _resolve(self, path: str) -> Path:
         return _resolve_path(path, self._workspace, self._allowed_dir, self._extra_allowed_dirs)
 
+    def _resolve_read(
+        self,
+        path: str,
+        *,
+        tool_name: str,
+        approval_id: str | None = None,
+    ) -> Path:
+        try:
+            return self._resolve(path)
+        except PermissionError:
+            if self._external_read_approved(
+                path,
+                tool_name=tool_name,
+                approval_id=approval_id,
+            ):
+                return _resolve_path(path, self._workspace, allowed_dir=None)
+            raise
+
+    def _external_read_approved(
+        self,
+        path: str,
+        *,
+        tool_name: str,
+        approval_id: str | None,
+    ) -> bool:
+        if not self._workspace or not approval_id:
+            return False
+        try:
+            from mlpcopilot.agent.tools.session_context import current_session_key
+            from mlpcopilot.runtime.approval import approved_external_path_access
+
+            return approved_external_path_access(
+                self._workspace,
+                approval_id=approval_id,
+                tool_name=tool_name,
+                raw_path=path,
+                session_key=current_session_key(),
+            )
+        except Exception:
+            return False
+
     def _resolve_write(self, path: str) -> Path:
         resolved = self._resolve(path)
         return resolved
@@ -328,6 +369,7 @@ def _parse_page_range(pages: str, total: int) -> tuple[int, int]:
 @tool_parameters(
     tool_parameters_schema(
         path=StringSchema("The file path to read"),
+        approval_id=StringSchema("Approval ID for approved external path reads", nullable=True),
         offset=IntegerSchema(
             1,
             description="Line number to start reading from (1-indexed, default 1)",
@@ -368,7 +410,15 @@ class ReadFileTool(_FsTool):
     def read_only(self) -> bool:
         return True
 
-    async def execute(self, path: str | None = None, offset: int = 1, limit: int | None = None, pages: str | None = None, **kwargs: Any) -> Any:
+    async def execute(
+        self,
+        path: str | None = None,
+        offset: int = 1,
+        limit: int | None = None,
+        pages: str | None = None,
+        approval_id: str | None = None,
+        **kwargs: Any,
+    ) -> Any:
         try:
             if not path:
                 return "Error reading file: Unknown path"
@@ -377,7 +427,7 @@ class ReadFileTool(_FsTool):
             if _is_blocked_device(path):
                 return f"Error: Reading {path} is blocked (device path that could hang or produce infinite output)."
 
-            fp = self._resolve(path)
+            fp = self._resolve_read(path, tool_name=self.name, approval_id=approval_id)
             if _is_blocked_device(fp):
                 return f"Error: Reading {fp} is blocked (device path that could hang or produce infinite output)."
             if not fp.exists():
@@ -556,6 +606,7 @@ class ReadFileTool(_FsTool):
 @tool_parameters(
     tool_parameters_schema(
         path=StringSchema("The file or directory path to inspect"),
+        approval_id=StringSchema("Approval ID for approved external path reads", nullable=True),
         required=["path"],
     )
 )
@@ -581,7 +632,12 @@ class FileInfoTool(_FsTool):
         try:
             if not path:
                 raise ValueError("Unknown path")
-            fp = self._resolve(path)
+            approval_id = kwargs.get("approval_id")
+            fp = self._resolve_read(
+                path,
+                tool_name=self.name,
+                approval_id=approval_id if isinstance(approval_id, str) else None,
+            )
             exists = fp.exists()
             lines = [
                 f"path: {path}",
@@ -1206,6 +1262,7 @@ class EditFileTool(_FsTool):
     tool_parameters_schema(
         path=StringSchema("The directory path to list"),
         recursive=BooleanSchema(description="Recursively list all files (default false)"),
+        approval_id=StringSchema("Approval ID for approved external path reads", nullable=True),
         max_entries=IntegerSchema(
             200,
             description="Maximum entries to return (default 200)",
@@ -1242,12 +1299,12 @@ class ListDirTool(_FsTool):
 
     async def execute(
         self, path: str | None = None, recursive: bool = False,
-        max_entries: int | None = None, **kwargs: Any,
+        max_entries: int | None = None, approval_id: str | None = None, **kwargs: Any,
     ) -> str:
         try:
             if path is None:
                 raise ValueError("Unknown path")
-            dp = self._resolve(path)
+            dp = self._resolve_read(path, tool_name=self.name, approval_id=approval_id)
             if not dp.exists():
                 return f"Error: Directory not found: {path}"
             if not dp.is_dir():

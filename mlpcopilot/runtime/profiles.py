@@ -101,6 +101,7 @@ MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST: tuple[str, ...] = (
 )
 
 MLPCOPILOT_WRITE_ALLOWLIST: tuple[str, ...] = ()
+MLPCOPILOT_READ_ALLOWLIST: tuple[str, ...] = ()
 
 MLPCOPILOT_DISABLED_BUILTIN_SKILLS = (
     "clawhub",
@@ -295,6 +296,8 @@ def apply_runtime_profile_defaults(config: Any) -> Any:
         tools.enabled_builtin_tools = list(MLPCOPILOT_ENABLED_BUILTIN_TOOLS)
     if not _field_was_set(tools, "write_allowlist"):
         tools.write_allowlist = list(MLPCOPILOT_WRITE_ALLOWLIST)
+    if not _field_was_set(tools, "read_allowlist"):
+        tools.read_allowlist = list(MLPCOPILOT_READ_ALLOWLIST)
     if not _field_was_set(tools, "approval_allowlist"):
         tools.approval_allowlist = list(MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST)
     if not _field_was_set(tools, "approval_gated_writes"):

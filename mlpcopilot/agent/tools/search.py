@@ -164,6 +164,10 @@ class GlobTool(_SearchTool):
                     "type": "string",
                     "description": "Directory to search from (default '.')",
                 },
+                "approval_id": {
+                    "type": ["string", "null"],
+                    "description": "Approval ID for approved external path reads",
+                },
                 "max_results": {
                     "type": "integer",
                     "description": "Legacy alias for head_limit",
@@ -199,10 +203,15 @@ class GlobTool(_SearchTool):
         head_limit: int | None = None,
         offset: int = 0,
         entry_type: str = "files",
+        approval_id: str | None = None,
         **kwargs: Any,
     ) -> str:
         try:
-            root = self._resolve(path or ".")
+            root = self._resolve_read(
+                path or ".",
+                tool_name=self.name,
+                approval_id=approval_id,
+            )
             if not root.exists():
                 return f"Error: Path not found: {path}"
             if not root.is_dir():
@@ -284,6 +293,10 @@ class GrepTool(_SearchTool):
                 "path": {
                     "type": "string",
                     "description": "File or directory to search in (default '.')",
+                },
+                "approval_id": {
+                    "type": ["string", "null"],
+                    "description": "Approval ID for approved external path reads",
                 },
                 "glob": {
                     "type": "string",
@@ -390,10 +403,15 @@ class GrepTool(_SearchTool):
         max_results: int | None = None,
         head_limit: int | None = None,
         offset: int = 0,
+        approval_id: str | None = None,
         **kwargs: Any,
     ) -> str:
         try:
-            target = self._resolve(path or ".")
+            target = self._resolve_read(
+                path or ".",
+                tool_name=self.name,
+                approval_id=approval_id,
+            )
             if not target.exists():
                 return f"Error: Path not found: {path}"
             if not (target.is_dir() or target.is_file()):

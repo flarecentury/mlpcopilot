@@ -69,6 +69,37 @@ def test_mlpcopilot_profile_registers_web_tools_when_web_is_enabled(tmp_path: Pa
     assert "web_fetch" in loop.tools.tool_names
 
 
+@pytest.mark.asyncio
+async def test_mlpcopilot_read_allowlist_extends_restricted_file_tools(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    external = tmp_path / "Deep_MD"
+    external.mkdir()
+    log = external / "error.log"
+    log.write_text("socket.gaierror", encoding="utf-8")
+    config = Config.model_validate(
+        {
+            "runtimeProfile": "mlpcopilot",
+            "tools": {"readAllowlist": [str(external)]},
+        }
+    )
+    loop = AgentLoop(
+        bus=MessageBus(),
+        provider=_provider(),
+        workspace=workspace,
+        model="test-model",
+        web_config=config.tools.web,
+        exec_config=config.tools.exec,
+        restrict_to_workspace=config.tools.restrict_to_workspace,
+        tools_config=config.tools,
+    )
+
+    result = await loop.tools.execute("read_file", {"path": str(log)})
+
+    assert "socket.gaierror" in result
+    assert "outside allowed directory" not in result
+
+
 def test_mlpcopilot_runtime_config_enables_dream_approval(tmp_path: Path) -> None:
     config = Config.model_validate({"runtimeProfile": "mlpcopilot"})
 

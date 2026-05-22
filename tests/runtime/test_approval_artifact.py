@@ -141,6 +141,59 @@ def test_tool_approval_policy_allows_default_read_tools_by_exact_allowlist(tmp_p
     assert ApprovalManager(tmp_path).list_pending() == []
 
 
+def test_tool_approval_policy_gates_external_read_paths_despite_allowlist(tmp_path) -> None:
+    from mlpcopilot.agent.tools.filesystem import ReadFileTool
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside = tmp_path / "runs" / "error.log"
+    outside.parent.mkdir()
+    outside.write_text("failed", encoding="utf-8")
+
+    blocked = tool_approval_error(
+        workspace,
+        tool_name="read_file",
+        arguments={"path": str(outside)},
+        tool=ReadFileTool(workspace=workspace, allowed_dir=workspace),
+        approval_allowlist=MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST,
+        session_key="tui:test",
+    )
+    pending = ApprovalManager(workspace, session_key="tui:test").list_pending()
+
+    assert "Approval required" in blocked
+    assert len(pending) == 1
+    assert pending[0].metadata["tool"] == "read_file"
+    assert pending[0].metadata["path_scope"] == "external"
+    assert pending[0].metadata["resolved_path"] == str(outside.resolve())
+    assert pending[0].metadata["risk_level"] == "high"
+
+
+def test_tool_approval_policy_keeps_explicit_extra_read_dirs_allowlisted(tmp_path) -> None:
+    from mlpcopilot.agent.tools.filesystem import ReadFileTool
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    skills_dir = tmp_path / "skills"
+    skill = skills_dir / "mlp" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Skill", encoding="utf-8")
+
+    blocked = tool_approval_error(
+        workspace,
+        tool_name="read_file",
+        arguments={"path": str(skill)},
+        tool=ReadFileTool(
+            workspace=workspace,
+            allowed_dir=workspace,
+            extra_allowed_dirs=[skills_dir],
+        ),
+        approval_allowlist=MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST,
+    )
+
+    assert blocked is None
+    assert ApprovalManager(workspace).list_pending() == []
+
+
 def test_tool_approval_policy_gates_existing_file_tools(tmp_path) -> None:
     target = tmp_path / "a.txt"
     target.write_text("old", encoding="utf-8")
@@ -308,6 +361,45 @@ async def test_resume_approved_tool_execution_replays_arguments(tmp_path) -> Non
 
     assert result == "Resumed exec after approval:\nok"
     assert tool.calls == [{"command": "ls", "approval_id": record.approval_id}]
+
+
+@pytest.mark.asyncio
+async def test_resume_approved_external_read_file_replays_with_approval(tmp_path) -> None:
+    from mlpcopilot.agent.tools.filesystem import ReadFileTool
+    from mlpcopilot.agent.tools.session_context import bind_session_key, reset_session_key
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside = tmp_path / "dpgen" / "error.log"
+    outside.parent.mkdir()
+    outside.write_text("socket.gaierror", encoding="utf-8")
+    session_key = "tui:test"
+
+    blocked = tool_approval_error(
+        workspace,
+        tool_name="read_file",
+        arguments={"path": str(outside)},
+        tool=ReadFileTool(workspace=workspace, allowed_dir=workspace),
+        approval_allowlist=MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST,
+        session_key=session_key,
+    )
+    pending = ApprovalManager(workspace, session_key=session_key).list_pending()
+    assert "Approval required" in blocked
+
+    approved = ApprovalManager(workspace, session_key=session_key).approve(
+        pending[0].approval_id,
+        decided_by="test",
+    )
+    tool = ReadFileTool(workspace=workspace, allowed_dir=workspace)
+    token = bind_session_key(session_key)
+    try:
+        result = await resume_approved_action(_Loop(tool, name="read_file"), approved)
+    finally:
+        reset_session_key(token)
+
+    assert result is not None
+    assert result.startswith("Resumed read_file after approval:")
+    assert "socket.gaierror" in result
 
 
 @pytest.mark.asyncio

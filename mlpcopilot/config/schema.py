@@ -315,6 +315,7 @@ class ToolsConfig(Base):
     approval_required_for_tools: bool = False  # Require ApprovalManager for agent-side tool calls.
     approval_allowlist: list[str] = Field(default_factory=list)  # Exact tool names that can run without ApprovalManager.
     enabled_builtin_tools: list[str] | None = None  # Optional allowlist for built-in tool names.
+    read_allowlist: list[str] = Field(default_factory=list)  # Optional extra read roots/files outside the workspace.
     write_allowlist: list[str] = Field(default_factory=list)  # Optional workspace-relative write roots/files.
     approval_gated_writes: bool = False  # Require ApprovalManager records for edits/overwrites.
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)

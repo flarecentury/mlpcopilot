@@ -271,6 +271,13 @@ def tool_requires_approval(
     approval_allowlist: list[str] | tuple[str, ...] | set[str] | None = None,
 ) -> bool:
     """Return whether a tool call should be approval-gated by runtime policy."""
+    if workspace is not None and _requires_external_path_approval(
+        workspace,
+        tool_name,
+        arguments or {},
+        tool=tool,
+    ):
+        return True
     if tool_name in set(approval_allowlist or ()):
         return False
     if getattr(tool, "read_only", False) is True:
@@ -318,10 +325,13 @@ def tool_approval_error(
         if session_key:
             metadata["session_key"] = session_key
         rel_path = _approval_relative_path(workspace, normalized_args.get("path"))
-        if rel_path is not None:
-            metadata["path"] = rel_path
+        path_metadata = _approval_path_metadata(workspace, normalized_args.get("path"))
+        if path_metadata:
+            metadata.update(path_metadata)
         if tool_name in {"write_file", "edit_file", "notebook_edit"}:
             metadata.update(_file_tool_risk_metadata(rel_path))
+        elif metadata.get("path_scope") == "external":
+            metadata.update(_external_path_risk_metadata(tool_name))
         if tool_name == "exec":
             command = normalized_args.get("command")
             working_dir = normalized_args.get("working_dir")
@@ -332,8 +342,8 @@ def tool_approval_error(
         run_id = normalized_args.get("run_id")
         record = manager.create(
             action_type="tool_execution",
-            title=_approval_title(tool_name, normalized_args),
-            request=_approval_request(tool_name, normalized_args),
+            title=_approval_title(tool_name, normalized_args, metadata),
+            request=_approval_request(tool_name, normalized_args, metadata),
             requester="agent",
             run_id=run_id.strip() if isinstance(run_id, str) and run_id.strip() else None,
             metadata=metadata,
@@ -466,6 +476,95 @@ def _resolve_workspace_path(workspace: Path, raw_path: Any) -> Path | None:
     return resolved
 
 
+_EXTERNAL_PATH_APPROVAL_TOOLS = frozenset({
+    "read_file",
+    "file_info",
+    "list_dir",
+    "grep",
+    "glob",
+})
+
+
+def _policy_resolved_path(workspace: Path, raw_path: Any) -> Path | None:
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        return None
+    root = workspace.expanduser().resolve()
+    candidate = Path(raw_path).expanduser()
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    return candidate.resolve(strict=False)
+
+
+def _path_is_external_to_workspace(workspace: Path, raw_path: Any) -> bool:
+    return _policy_resolved_path(workspace, raw_path) is not None and _resolve_workspace_path(
+        workspace,
+        raw_path,
+    ) is None
+
+
+def _requires_external_path_approval(
+    workspace: Path,
+    tool_name: str,
+    arguments: dict[str, Any],
+    *,
+    tool: Any | None = None,
+) -> bool:
+    if tool_name not in _EXTERNAL_PATH_APPROVAL_TOOLS:
+        return False
+    raw_path = arguments.get("path")
+    if not _path_is_external_to_workspace(workspace, raw_path):
+        return False
+    return not _tool_allows_read_path(tool, raw_path)
+
+
+def _tool_allows_read_path(tool: Any | None, raw_path: Any) -> bool:
+    if tool is None or not isinstance(raw_path, str) or not raw_path.strip():
+        return False
+    if getattr(tool, "_allowed_dir", None) is None:
+        return False
+    resolve = getattr(tool, "_resolve", None)
+    if not callable(resolve):
+        return False
+    try:
+        resolve(raw_path)
+    except PermissionError:
+        return False
+    except Exception:
+        return False
+    return True
+
+
+def _approval_path_metadata(workspace: Path, raw_path: Any) -> dict[str, Any]:
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        return {}
+    resolved = _policy_resolved_path(workspace, raw_path)
+    if resolved is None:
+        return {}
+    rel_path = _approval_relative_path(workspace, raw_path)
+    if rel_path is not None:
+        return {
+            "path": rel_path,
+            "path_scope": "workspace",
+            "resolved_path": str(resolved),
+        }
+    return {
+        "path": str(resolved),
+        "path_scope": "external",
+        "raw_path": raw_path,
+        "resolved_path": str(resolved),
+    }
+
+
+def _external_path_risk_metadata(tool_name: str) -> dict[str, str]:
+    return {
+        "risk_level": "high",
+        "risk_reason": (
+            f"{tool_name} targets a path outside the configured workspace; "
+            "approval allows this exact read-only path access"
+        ),
+    }
+
+
 def _file_tool_risk_metadata(rel_path: str | None) -> dict[str, str]:
     rel = (rel_path or "").replace("\\", "/")
     if not rel:
@@ -496,9 +595,17 @@ def _file_tool_risk_metadata(rel_path: str | None) -> dict[str, str]:
     }
 
 
-def _approval_title(tool_name: str, normalized_args: Any) -> str:
+def _approval_title(
+    tool_name: str,
+    normalized_args: Any,
+    metadata: dict[str, Any] | None = None,
+) -> str:
     if tool_name.startswith("mcp_"):
         return f"Approve MCP tool: {tool_name}"
+    if isinstance(normalized_args, dict) and (metadata or {}).get("path_scope") == "external":
+        path = normalized_args.get("path")
+        if tool_name in _EXTERNAL_PATH_APPROVAL_TOOLS and isinstance(path, str):
+            return f"Approve {tool_name} external path: {path}"
     if tool_name in {"write_file", "edit_file", "notebook_edit"}:
         path = normalized_args.get("path") if isinstance(normalized_args, dict) else None
         suffix = f" on {path}" if isinstance(path, str) else ""
@@ -506,13 +613,23 @@ def _approval_title(tool_name: str, normalized_args: Any) -> str:
     return f"Approve {tool_name}: {_short_json(normalized_args, 80)}"
 
 
-def _approval_request(tool_name: str, normalized_args: Any) -> str:
+def _approval_request(
+    tool_name: str,
+    normalized_args: Any,
+    metadata: dict[str, Any] | None = None,
+) -> str:
     args_text = json.dumps(normalized_args, ensure_ascii=False, sort_keys=True)
     if tool_name.startswith("mcp_"):
         return (
             "An MCP tool call can run external plugin code and may create or "
             "modify artifacts.\n\n"
             f"Tool: {tool_name}\nArguments: {args_text}"
+        )
+    if tool_name in _EXTERNAL_PATH_APPROVAL_TOOLS and (metadata or {}).get("path_scope") == "external":
+        return (
+            f"{tool_name} wants to read or inspect a path outside the configured "
+            "workspace.\n\n"
+            f"Arguments: {args_text}"
         )
     if tool_name in {"write_file", "edit_file", "notebook_edit"}:
         return (
@@ -534,6 +651,53 @@ def _find_pending_tool_approval(
             and metadata.get("tool") == tool_name
             and metadata.get("args_hash") == args_hash
         ):
+            return record
+    return None
+
+
+def approved_external_path_access(
+    workspace: Path,
+    *,
+    approval_id: str | None,
+    tool_name: str,
+    raw_path: str,
+    session_key: str | None = None,
+) -> bool:
+    """Return whether an approved record grants this exact external path read."""
+    if not approval_id:
+        return False
+    requested = _policy_resolved_path(workspace, raw_path)
+    if requested is None:
+        return False
+    record = _get_approval_record(workspace, approval_id, session_key=session_key)
+    if record is None or record.status not in {"approved", "partially_approved"}:
+        return False
+    metadata = record.metadata or {}
+    if record.action_type != "tool_execution":
+        return False
+    if metadata.get("tool") != tool_name:
+        return False
+    if metadata.get("path_scope") != "external":
+        return False
+    approved_path = metadata.get("resolved_path")
+    if not isinstance(approved_path, str):
+        return False
+    return Path(approved_path).expanduser().resolve(strict=False) == requested
+
+
+def _get_approval_record(
+    workspace: Path,
+    approval_id: str,
+    *,
+    session_key: str | None = None,
+) -> ApprovalRecord | None:
+    managers: list[ApprovalManager] = []
+    if session_key:
+        managers.append(ApprovalManager(workspace, session_key=session_key))
+    managers.append(ApprovalManager(workspace))
+    for manager in managers:
+        record = manager.get(approval_id)
+        if record is not None:
             return record
     return None
 

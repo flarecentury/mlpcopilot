@@ -80,6 +80,7 @@ class SubagentManager:
         web_config: "WebToolsConfig | None" = None,
         exec_config: "ExecToolConfig | None" = None,
         restrict_to_workspace: bool = False,
+        read_allowlist: list[str] | None = None,
         disabled_skills: list[str] | None = None,
         max_iterations: int | None = None,
     ):
@@ -91,6 +92,7 @@ class SubagentManager:
         self.max_tool_result_chars = max_tool_result_chars
         self.exec_config = exec_config or ExecToolConfig()
         self.restrict_to_workspace = restrict_to_workspace
+        self.read_allowlist = list(read_allowlist or [])
         self.disabled_skills = set(disabled_skills or [])
         self.max_iterations = (
             max_iterations
@@ -169,7 +171,7 @@ class SubagentManager:
             # Build subagent tools (no message tool, no spawn tool)
             tools = ToolRegistry()
             allowed_dir = self.workspace if (self.restrict_to_workspace or self.exec_config.sandbox) else None
-            extra_read = [BUILTIN_SKILLS_DIR] if allowed_dir else None
+            extra_read = [BUILTIN_SKILLS_DIR, *self._read_allowlist_paths()] if allowed_dir else None
             # Subagent gets its own FileStates so its read-dedup cache is
             # isolated from the parent loop's sessions (issue #3571).
             from mlpcopilot.agent.tools.file_state import FileStates
@@ -335,6 +337,17 @@ class SubagentManager:
             workspace=str(self.workspace),
             skills_summary=skills_summary or "",
         )
+
+    def _read_allowlist_paths(self) -> list[Path]:
+        paths: list[Path] = []
+        workspace = self.workspace.expanduser()
+        for entry in self.read_allowlist:
+            raw = str(entry).strip()
+            if not raw:
+                continue
+            configured = Path(raw).expanduser()
+            paths.append(configured if configured.is_absolute() else workspace / configured)
+        return paths
 
     async def cancel_by_session(self, session_key: str) -> int:
         """Cancel all subagents for the given session. Returns count cancelled."""

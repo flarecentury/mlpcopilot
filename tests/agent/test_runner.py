@@ -135,6 +135,61 @@ async def test_runner_registers_same_turn_approvals_then_pauses(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runner_turns_external_read_boundary_into_approval(tmp_path):
+    from mlpcopilot.agent.runner import AgentRunner, AgentRunSpec
+    from mlpcopilot.agent.tools.filesystem import ReadFileTool
+    from mlpcopilot.runtime.approval import ApprovalManager
+    from mlpcopilot.runtime.profiles import MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside = tmp_path / "dpgen" / "error.log"
+    outside.parent.mkdir()
+    outside.write_text("socket.gaierror", encoding="utf-8")
+    provider = MagicMock()
+    provider.chat_with_retry = AsyncMock(side_effect=[
+        LLMResponse(
+            content="",
+            finish_reason="tool_calls",
+            tool_calls=[
+                ToolCallRequest(
+                    id="call_1",
+                    name="read_file",
+                    arguments={"path": str(outside)},
+                )
+            ],
+        ),
+        LLMResponse(content="should not continue"),
+    ])
+    tools = ToolRegistry()
+    tools.register(ReadFileTool(workspace=workspace, allowed_dir=workspace))
+
+    result = await AgentRunner(provider).run(AgentRunSpec(
+        initial_messages=[{"role": "user", "content": "check error.log"}],
+        tools=tools,
+        model="test-model",
+        max_iterations=5,
+        max_tool_result_chars=_MAX_TOOL_RESULT_CHARS,
+        workspace=workspace,
+        session_key="tui:test",
+        approval_required_for_tools=True,
+        tool_approval_allowlist=MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST,
+    ))
+
+    assert provider.chat_with_retry.await_count == 1
+    assert result.stop_reason == "approval_required"
+    assert "Approval required" in (result.final_content or "")
+    assert result.tool_events[0]["name"] == "read_file"
+    assert result.tool_events[0]["status"] == "waiting"
+    assert "Approval required" in result.tool_events[0]["detail"]
+    assert "outside allowed directory" not in (result.error or "")
+    pending = ApprovalManager(workspace, session_key="tui:test").list_pending()
+    assert len(pending) == 1
+    assert pending[0].metadata["tool"] == "read_file"
+    assert pending[0].metadata["path_scope"] == "external"
+
+
+@pytest.mark.asyncio
 async def test_runner_preserves_reasoning_fields_and_tool_results():
     from mlpcopilot.agent.runner import AgentRunner, AgentRunSpec
 

@@ -11,6 +11,7 @@ from mlpcopilot.runtime.profiles import (
     MLPCOPILOT_EXEC_ALLOW_COMMANDS,
     MLPCOPILOT_EXEC_BACKGROUND_COMMANDS,
     MLPCOPILOT_EXEC_READONLY_COMMANDS,
+    MLPCOPILOT_READ_ALLOWLIST,
     MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST,
     MLPCOPILOT_TRAINING_CONTROLLER_MCP,
     MLPCOPILOT_WRITE_ALLOWLIST,
@@ -35,6 +36,7 @@ def test_mlpcopilot_profile_applies_safe_runtime_defaults() -> None:
     assert "my" in config.tools.enabled_builtin_tools
     assert "my" not in config.tools.approval_allowlist
     assert config.tools.enabled_builtin_tools == list(MLPCOPILOT_ENABLED_BUILTIN_TOOLS)
+    assert config.tools.read_allowlist == list(MLPCOPILOT_READ_ALLOWLIST)
     assert config.tools.write_allowlist == list(MLPCOPILOT_WRITE_ALLOWLIST)
     assert config.tools.approval_allowlist == list(MLPCOPILOT_TOOL_APPROVAL_ALLOWLIST)
     assert config.tools.approval_gated_writes is True
@@ -337,6 +339,17 @@ def test_tools_accept_custom_exact_approval_allowlist() -> None:
     )
 
     assert config.tools.approval_allowlist == ["mcp_custom_server_safe_tool"]
+
+
+def test_tools_accept_custom_read_allowlist() -> None:
+    config = Config.model_validate(
+        {
+            "runtimeProfile": "mlpcopilot",
+            "tools": {"readAllowlist": ["/storage/MD_domain/Deep_MD"]},
+        }
+    )
+
+    assert config.tools.read_allowlist == ["/storage/MD_domain/Deep_MD"]
 
 
 def test_tui_accepts_campaign_status_paths() -> None:

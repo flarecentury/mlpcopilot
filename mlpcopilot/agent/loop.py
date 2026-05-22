@@ -254,6 +254,7 @@ class AgentLoop:
         self._enabled_builtin_tools = (
             set(_tc.enabled_builtin_tools) if _tc.enabled_builtin_tools is not None else None
         )
+        self._read_allowlist = list(_tc.read_allowlist)
         self._write_allowlist = list(_tc.write_allowlist)
         self._approval_gated_writes = _tc.approval_gated_writes
         self._approval_required_for_tools = _tc.approval_required_for_tools
@@ -280,6 +281,7 @@ class AgentLoop:
             max_tool_result_chars=self.max_tool_result_chars,
             exec_config=self.exec_config,
             restrict_to_workspace=restrict_to_workspace,
+            read_allowlist=self._read_allowlist,
             disabled_skills=disabled_skills,
             max_iterations=self.max_iterations,
         )
@@ -406,7 +408,7 @@ class AgentLoop:
         allowed_dir = (
             self.workspace if (self.restrict_to_workspace or self.exec_config.sandbox) else None
         )
-        extra_read = [BUILTIN_SKILLS_DIR] if allowed_dir else None
+        extra_read = [BUILTIN_SKILLS_DIR, *self._read_allowlist_paths()] if allowed_dir else None
         if self._builtin_tool_enabled("ask_user"):
             self.tools.register(AskUserTool())
         if self._builtin_tool_enabled("read_file"):
@@ -518,6 +520,17 @@ class AgentLoop:
             self.tools.register(
                 CronTool(self.cron_service, default_timezone=self.context.timezone or "UTC")
             )
+
+    def _read_allowlist_paths(self) -> list[Path]:
+        paths: list[Path] = []
+        workspace = self.workspace.expanduser()
+        for entry in self._read_allowlist:
+            raw = str(entry).strip()
+            if not raw:
+                continue
+            configured = Path(raw).expanduser()
+            paths.append(configured if configured.is_absolute() else workspace / configured)
+        return paths
 
     async def _connect_mcp(self) -> None:
         """Connect to configured MCP servers (one-time, lazy)."""
