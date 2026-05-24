@@ -104,7 +104,6 @@ MLPCOPILOT_WRITE_ALLOWLIST: tuple[str, ...] = ()
 MLPCOPILOT_READ_ALLOWLIST: tuple[str, ...] = ()
 
 MLPCOPILOT_DISABLED_BUILTIN_SKILLS = (
-    "clawhub",
     "github",
     "skill-creator",
     "summarize",

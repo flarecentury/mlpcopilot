@@ -561,7 +561,7 @@ scientific algorithms.
       "provider": "openrouter",
       "model": "anthropic/claude-opus-4-6",
       "timezone": "Asia/Shanghai",
-      "disabledSkills": ["weather", "github", "clawhub"],
+      "disabledSkills": ["weather", "github"],
       "maxToolIterations": 80
     }
   },
