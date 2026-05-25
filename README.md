@@ -17,6 +17,13 @@ originated from the general-purpose
 narrowed toward local and remote scientific workflows where artifacts, human
 approvals, and traceable decisions matter.
 
+It also builds on lessons from our earlier
+[`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) research
+framework for AI-assisted machine-learning-potential development, active
+learning supervision, and aluminum nanoparticle oxidation analysis. MLP Copilot
+extracts that workflow experience into a more general runtime-plus-plugin
+architecture for broader MLP operations.
+
 The current product focus is DeepMD-kit / DP-GEN active-learning operations:
 workspace initialization, configuration checks, run-state projection, artifact
 tracking, log inspection, and human-approved control actions.
@@ -204,6 +211,9 @@ MLP Copilot builds on and adapts work from the following projects and products:
 
 - [`HKUDS/nanobot`](https://github.com/HKUDS/nanobot), the MIT-licensed
   general-purpose agent runtime that provided the original runtime foundation.
+- [`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP), the
+  earlier AI-assisted MLP development framework whose active-learning and
+  scientific-workflow experience informed this project direction.
 - [`PromtEngineer/agentic-file-search`](https://github.com/PromtEngineer/agentic-file-search),
   the MIT-licensed document-search project adapted as the bundled
   `agentic-file-search` MCP package.
