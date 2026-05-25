@@ -1,0 +1,61 @@
+slices:
+  - id: boundary-condition-shift
+    title: Periodic-to-finite boundary-condition shift
+    why_it_matters: >
+      The model is trained mostly on periodic bulk and surface environments but
+      tested on isolated finite clusters with non-periodic electrostatics and
+      strong surface curvature.
+    inputs:
+      - finite cluster AIMD trajectories
+      - checkpoint path
+      - reference DFT energies and forces
+    recommended_checks:
+      - force RMSE
+      - relative energy fluctuation RMSE
+      - qualitative failure scan on unstable frames
+
+  - id: coordination-shift
+    title: Low-coordination edge and vertex environments
+    why_it_matters: >
+      Cluster vertices and edges introduce environments that are underrepresented
+      in terrace-dominated surface training data.
+    inputs:
+      - trajectories with site diversity across cluster sizes
+    recommended_checks:
+      - error grouped by cluster family
+      - review of high-force frames near edge and vertex sites
+
+  - id: size-extrapolation
+    title: Larger cluster-family extrapolation
+    why_it_matters: >
+      Larger clusters can preserve some local motifs but still create new
+      combinations of curvature, coordination, and adsorbate access.
+    inputs:
+      - multiple cluster sizes such as Al13, Al55, Al79, Al147, Al309
+    recommended_checks:
+      - per-configuration RMSE summary
+      - error trend versus cluster size
+
+  - id: thermal-shift
+    title: High-temperature AIMD window
+    why_it_matters: >
+      Thermal motion at 700 K and 1200 K can expose strained bonds, close
+      contacts, and unusual local geometries absent from near-equilibrium data.
+    inputs:
+      - high-temperature AIMD trajectories
+    recommended_checks:
+      - skip initial equilibration frames before scoring
+      - compare error distribution across temperatures
+
+  - id: reactive-adsorbate-shift
+    title: O2 approach and near-dissociation frames
+    why_it_matters: >
+      Adsorbate reorientation, O-O stretch, and near-reaction geometries can
+      create high-force and chemically sensitive frames.
+    inputs:
+      - O2-bearing trajectories
+      - reference calculations for reactive windows
+    recommended_checks:
+      - force parity
+      - relative energy fluctuation parity
+      - targeted inspection of worst-error windows

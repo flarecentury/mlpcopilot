@@ -1,0 +1,59 @@
+case_name: al-o2-cluster-ood
+title: Bulk and surface trained Al/O model validated on larger finite Al cluster AIMD
+
+training_domain:
+  systems:
+    - periodic bulk Al
+    - periodic Al surfaces
+    - adsorbate-containing surface configurations if available
+  boundary_conditions:
+    - periodic
+  expected_local_environments:
+    - bulk-like coordination
+    - terrace-like surface coordination
+
+target_domain:
+  systems:
+    - finite Al clusters with O2 adsorbates
+  examples:
+    - Al13 + 4O2
+    - Al55 + 6O2
+    - Al79 + 4O2
+    - Al147 + 6O2
+    - Al309 + 4O2
+  boundary_conditions:
+    - non-periodic
+  trajectory_type:
+    - CP2K AIMD
+  temperature_windows_k:
+    - 700
+    - 1200
+
+suspected_ood_sources:
+  - periodic-to-finite boundary-condition shift
+  - low-coordination edge and vertex environments
+  - curved cluster surfaces rather than flat slabs
+  - larger cluster family than dominant training motifs
+  - reactive O2 approach, stretch, and near-dissociation frames
+  - high-temperature AIMD fluctuations
+
+checkpoint:
+  path: path/to/checkpoint
+  backend: deepmd
+  benchmark_artifacts: []
+
+reference_budget:
+  reference_method: CP2K AIMD
+  max_new_labels: project-specific
+  compute_limits:
+    - walltime depends on cluster size
+    - long AIMD runs require explicit approval
+
+acceptance_criteria:
+  note: |
+    Define project-specific criteria before checkpoint promotion. Typical
+    examples are force RMSE, relative energy fluctuation RMSE, and no severe
+    failure on target OOD slices. Avoid claiming universal transferability.
+
+decision_owner:
+  role: project lead or checkpoint approver
