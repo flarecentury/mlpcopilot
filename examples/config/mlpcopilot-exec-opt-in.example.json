@@ -1,0 +1,56 @@
+{
+  "runtimeProfile": "mlpcopilot",
+  "agents": {
+    "defaults": {
+      "workspace": "~/.mlpcopilot/workspace",
+      "provider": "custom",
+      "model": "your-openai-compatible-model",
+      "timezone": "UTC"
+    }
+  },
+  "providers": {
+    "custom": {
+      "apiKey": "${MLPCOPILOT_CUSTOM_API_KEY}",
+      "apiBase": "${MLPCOPILOT_CUSTOM_API_BASE}"
+    }
+  },
+  "tools": {
+    "enabledBuiltinTools": [
+      "ask_user",
+      "my",
+      "read_file",
+      "file_info",
+      "list_dir",
+      "grep",
+      "glob",
+      "web_search",
+      "web_fetch",
+      "write_file",
+      "edit_file",
+      "message",
+      "workstate",
+      "exec"
+    ],
+    "exec": {
+      "enable": true,
+      "requireAllowlist": true,
+      "approvalRequired": true,
+      "allowCommands": [
+        "pwd",
+        "ls",
+        "ls -a",
+        "ls -al",
+        "ls -la",
+        "git status",
+        "git status --short",
+        "python --version",
+        "python3 --version",
+        "uv --version"
+      ],
+      "allowPatterns": [
+        "^pytest\\b",
+        "^python -m pytest\\b"
+      ]
+    }
+  }
+}

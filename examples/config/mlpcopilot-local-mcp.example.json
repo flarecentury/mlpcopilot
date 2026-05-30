@@ -1,0 +1,385 @@
+{
+  "runtimeProfile": "mlpcopilot",
+  "agents": {
+    "defaults": {
+      "workspace": "~/.mlpcopilot/workspace",
+      "model": "your-openai-compatible-model",
+      "provider": "custom",
+      "maxTokens": 8192,
+      "contextWindowTokens": 65536,
+      "contextBlockLimit": null,
+      "temperature": 0.1,
+      "maxToolIterations": 200,
+      "maxToolResultChars": 16000,
+      "providerRetryMode": "standard",
+      "reasoningEffort": null,
+      "timezone": "UTC",
+      "unifiedSession": false,
+      "disabledSkills": [
+        "clawhub",
+        "github",
+        "skill-creator",
+        "summarize",
+        "update-setup"
+      ],
+      "idleCompactAfterMinutes": 0,
+      "maxMessages": 120,
+      "consolidationRatio": 0.5,
+      "dream": {
+        "intervalH": 2,
+        "modelOverride": null,
+        "maxBatchSize": 20,
+        "maxIterations": 15,
+        "annotateLineAges": true,
+        "approvalRequired": true
+      }
+    }
+  },
+  "channels": {
+    "sendProgress": true,
+    "sendToolHints": false,
+    "sendMaxRetries": 3,
+    "transcriptionProvider": "groq",
+    "transcriptionLanguage": null,
+    "telegram": {
+      "enabled": false,
+      "token": "",
+      "allowFrom": [],
+      "proxy": null,
+      "replyToMessage": false,
+      "reactEmoji": "\ud83d\udc40",
+      "groupPolicy": "mention",
+      "connectionPoolSize": 32,
+      "poolTimeout": 5.0,
+      "streaming": true,
+      "inlineKeyboards": false,
+      "streamEditInterval": 0.6
+    }
+  },
+  "providers": {
+    "custom": {
+      "apiKey": "${MLPCOPILOT_CUSTOM_API_KEY}",
+      "apiBase": "${MLPCOPILOT_CUSTOM_API_BASE}",
+      "extraHeaders": null,
+      "extraBody": null
+    },
+    "groq": {
+      "apiKey": "",
+      "apiBase": null,
+      "extraHeaders": null,
+      "extraBody": null
+    }
+  },
+  "api": {
+    "host": "127.0.0.1",
+    "port": 8900,
+    "timeout": 120.0,
+    "apiKey": "",
+    "trustProxyAuth": false
+  },
+  "gateway": {
+    "host": "127.0.0.1",
+    "port": 18790,
+    "heartbeat": {
+      "enabled": true,
+      "intervalS": 1800,
+      "keepRecentMessages": 8
+    }
+  },
+  "tui": {
+    "campaignStatusPaths": [
+      "active_learning/status.json",
+      "active_learning/status.md",
+      "active_learning/status.txt",
+      "campaign/status.json",
+      "campaign/status.md",
+      "campaign/status.txt"
+    ],
+    "companionStaleAfterSeconds": 3600,
+    "keymap": {
+      "pager": "f7",
+      "toolLog": "f8",
+      "jobs": "f9",
+      "layout": "f10",
+      "model": "f6",
+      "approve": "f2",
+      "reject": "f3",
+      "changes": "f4",
+      "quit": [
+        "c-c",
+        "c-d",
+        "f12"
+      ]
+    }
+  },
+  "commands": {
+    "gateway": {
+      "hide": [],
+      "show": null
+    },
+    "tui": {
+      "hide": [],
+      "show": null
+    }
+  },
+  "tools": {
+    "web": {
+      "enable": false,
+      "proxy": null,
+      "userAgent": null,
+      "search": {
+        "provider": "duckduckgo",
+        "apiKey": "",
+        "baseUrl": "",
+        "maxResults": 5,
+        "timeout": 30
+      },
+      "fetch": {
+        "useJinaReader": true
+      }
+    },
+    "exec": {
+      "enable": false,
+      "timeout": 60,
+      "pathAppend": "",
+      "sandbox": "",
+      "allowedEnvKeys": [],
+      "allowCommands": [
+        "pwd",
+        "ls",
+        "ls -a",
+        "ls -al",
+        "ls -la",
+        "whoami",
+        "id",
+        "date",
+        "uname",
+        "uname -a",
+        "hostname",
+        "df -h",
+        "du -sh .",
+        "free -h",
+        "ps aux",
+        "git status",
+        "git status --short",
+        "git diff --stat",
+        "git branch --show-current",
+        "git log --oneline -5",
+        "python --version",
+        "python3 --version",
+        "uv --version",
+        "git --version"
+      ],
+      "readonlyCommands": [
+        "ls",
+        "pwd",
+        "whoami",
+        "id",
+        "date",
+        "uname",
+        "hostname",
+        "df",
+        "du",
+        "free",
+        "ps",
+        "cat",
+        "head",
+        "tail",
+        "wc",
+        "grep",
+        "rg",
+        "stat",
+        "file",
+        "tree",
+        "printenv",
+        "which"
+      ],
+      "backgroundCommands": [
+        "cmatrix",
+        "top",
+        "htop",
+        "btop",
+        "watch"
+      ],
+      "allowPatterns": [],
+      "requireAllowlist": true,
+      "approvalRequired": true
+    },
+    "my": {
+      "enable": true,
+      "allowSet": false
+    },
+    "restrictToWorkspace": true,
+    "approvalRequiredForTools": true,
+    "approvalAllowlist": [
+      "ask_user",
+      "message",
+      "workstate",
+      "read_file",
+      "file_info",
+      "list_dir",
+      "grep",
+      "glob",
+      "web_search",
+      "web_fetch"
+    ],
+    "enabledBuiltinTools": [
+      "ask_user",
+      "my",
+      "read_file",
+      "file_info",
+      "list_dir",
+      "grep",
+      "glob",
+      "web_search",
+      "web_fetch",
+      "write_file",
+      "edit_file",
+      "message",
+      "workstate"
+    ],
+    "readAllowlist": [
+      "/path/to/project-or-data-root"
+    ],
+    "writeAllowlist": [],
+    "approvalGatedWrites": true,
+    "mcpServers": {
+      "trainingController": {
+        "type": "stdio",
+        "command": "uv",
+        "args": [
+          "--directory",
+          "${MLPCOPILOT_REPO_ROOT}/mlpcopilot/mcps/mlp_training_controller_mcp",
+          "run",
+          "mlp-training-controller-mcp"
+        ],
+        "env": {
+          "UV_CACHE_DIR": "/tmp/uv-cache",
+          "UV_LINK_MODE": "copy"
+        },
+        "url": "",
+        "headers": {},
+        "toolTimeout": 600,
+        "enabledTools": [
+          "inspect_training_project",
+          "generate_training_param",
+          "generate_training_machine",
+          "validate_training_inputs",
+          "validate_machine_runtime",
+          "get_training_status",
+          "list_training_iterations",
+          "inspect_training_iteration",
+          "collect_training_logs",
+          "analyze_training_failure",
+          "build_training_run_report",
+          "get_controller_state",
+          "start_training_run",
+          "stop_training_run",
+          "plan_training_rewind",
+          "apply_training_rewind",
+          "list_dispatcher_jobs",
+          "inspect_dispatcher_job",
+          "cancel_scheduler_jobs",
+          "snapshot_training_state",
+          "collect_iteration_evidence",
+          "plan_config_update",
+          "apply_config_update"
+        ]
+      },
+      "agentic-file-search": {
+        "type": null,
+        "command": "uv",
+        "args": [
+          "--directory",
+          "${MLPCOPILOT_REPO_ROOT}/mlpcopilot/mcps/agentic-file-search",
+          "run",
+          "agentic-file-search-mcp"
+        ],
+        "env": {
+          "FS_EXPLORER_MCP_ROOT": "${MLPCOPILOT_WORKSPACE}/knowledge",
+          "FS_EXPLORER_DB_PATH": "${MLPCOPILOT_WORKSPACE}/knowledge/fs-explorer.duckdb",
+          "FS_EXPLORER_OPENAI_COMPAT_BASE_URL": "${MLPCOPILOT_CUSTOM_API_BASE}",
+          "FS_EXPLORER_OPENAI_COMPAT_MODEL": "your-openai-compatible-model",
+          "FS_EXPLORER_AGENT_USE_INDEX": "1",
+          "FS_EXPLORER_MCP_ALLOW_INDEXING": "1",
+          "FS_EXPLORER_MCP_AUTO_REFRESH_INDEX": "1",
+          "FS_EXPLORER_MCP_ALLOW_EMBEDDINGS": "0",
+          "FS_EXPLORER_MCP_ALLOW_METADATA": "0",
+          "FS_EXPLORER_MCP_DISCOVER_SCHEMA": "0",
+          "FS_EXPLORER_MCP_INDEX_WORKERS": "4",
+          "FS_EXPLORER_AGENT_TIMEOUT": "120",
+          "FS_EXPLORER_OPENAI_COMPAT_API_KEY": "${MLPCOPILOT_CUSTOM_API_KEY}",
+          "UV_CACHE_DIR": "/tmp/uv-cache",
+          "UV_LINK_MODE": "copy"
+        },
+        "url": "",
+        "headers": {},
+        "toolTimeout": 120,
+        "enabledTools": [
+          "agentic_explore"
+        ]
+      },
+      "mlp-dataset": {
+        "type": "stdio",
+        "command": "uv",
+        "args": [
+          "--directory",
+          "${MLPCOPILOT_REPO_ROOT}/mlpcopilot/mcps/mlp_dataset_mcp",
+          "run",
+          "mlp-dataset-mcp"
+        ],
+        "env": {
+          "UV_CACHE_DIR": "/tmp/uv-cache",
+          "UV_LINK_MODE": "copy"
+        },
+        "url": "",
+        "headers": {},
+        "toolTimeout": 120,
+        "enabledTools": [
+          "*"
+        ]
+      },
+      "mlp-model-eval": {
+        "type": "stdio",
+        "command": "uv",
+        "args": [
+          "--directory",
+          "${MLPCOPILOT_REPO_ROOT}/mlpcopilot/mcps/mlp_model_eval_mcp",
+          "run",
+          "mlp-model-eval-mcp"
+        ],
+        "env": {
+          "UV_CACHE_DIR": "/tmp/uv-cache",
+          "UV_LINK_MODE": "copy"
+        },
+        "url": "",
+        "headers": {},
+        "toolTimeout": 120,
+        "enabledTools": [
+          "*"
+        ]
+      },
+      "mlp-report": {
+        "type": "stdio",
+        "command": "uv",
+        "args": [
+          "--directory",
+          "${MLPCOPILOT_REPO_ROOT}/mlpcopilot/mcps/mlp_report_mcp",
+          "run",
+          "mlp-report-mcp"
+        ],
+        "env": {
+          "UV_CACHE_DIR": "/tmp/uv-cache",
+          "UV_LINK_MODE": "copy"
+        },
+        "url": "",
+        "headers": {},
+        "toolTimeout": 120,
+        "enabledTools": [
+          "*"
+        ]
+      }
+    },
+    "ssrfWhitelist": []
+  }
+}

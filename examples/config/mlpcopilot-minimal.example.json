@@ -1,0 +1,24 @@
+{
+  "runtimeProfile": "mlpcopilot",
+  "agents": {
+    "defaults": {
+      "workspace": "~/.mlpcopilot/workspace",
+      "provider": "custom",
+      "model": "your-openai-compatible-model",
+      "timezone": "UTC"
+    }
+  },
+  "providers": {
+    "custom": {
+      "apiKey": "${MLPCOPILOT_CUSTOM_API_KEY}",
+      "apiBase": "${MLPCOPILOT_CUSTOM_API_BASE}"
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": false,
+      "token": "",
+      "allowFrom": []
+    }
+  }
+}

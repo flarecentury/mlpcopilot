@@ -7,6 +7,12 @@ Config file: `~/.mlpcopilot/config.json`
 > run `mlpcopilot onboard`, then answer `N` when asked whether to overwrite the config.
 > mlpcopilot will merge in missing default fields and keep your current settings.
 
+Complete JSON templates are available under
+[`examples/config/`](../../examples/config/), including a minimal MLP Copilot
+runtime config, a local source-tree MCP config, and an explicit `exec` opt-in
+config. The source-tree example is based on a local `~/.mlpcopilot/config.json`
+with secrets and private paths replaced by placeholders.
+
 ## Runtime Profile
 
 MLP Copilot defaults to the `mlpcopilot` runtime profile. The inherited `default` profile is kept only as a legacy internal compatibility mode for old configs; product onboarding and templates should use `mlpcopilot`.
