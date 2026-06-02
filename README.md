@@ -11,7 +11,7 @@
   <a href="./README.ja.md">日本語</a>
 </p>
 
-MLP Copilot is a vertical agent runtime for machine-learning-potential work. It
+MLP Copilot is a vertical agent runtime for machine-learning-potential training. It
 originated from the general-purpose
 [`HKUDS/nanobot`](https://github.com/HKUDS/nanobot) agent runtime and is now
 narrowed toward local and remote scientific workflows where artifacts, human
