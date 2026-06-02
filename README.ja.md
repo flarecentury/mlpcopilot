@@ -16,6 +16,16 @@ runtime です。現在は DeepMD-kit / DP-GEN のアクティブラーニング
 workspace 初期化、設定確認、実行状態の投影、artifact 追跡、ログ確認、人間による
 承認付きの制御操作を扱います。
 
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
+    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">完全版 MP4 demo を見る</a>
+</p>
+
 ## 提供機能
 
 | 領域 | 機能 |
@@ -42,16 +52,6 @@ AI agent、trained machine learning potential (MLP) models、および DFT
 energies/forces 付きの約 90,000 atomic configurations を含む comprehensive dataset
 はすべて、Digital Automation for Scientific Discovery platform (DigAuto) で
 ホストされています：[https://www.digauto.org](https://www.digauto.org)。
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
-    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
-  </a>
-</p>
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">完全版 MP4 demo を見る</a>
-</p>
 
 ## 必要条件
 

@@ -17,6 +17,16 @@ originated from the general-purpose
 narrowed toward local and remote scientific workflows where artifacts, human
 approvals, and traceable decisions matter.
 
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
+    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">Watch the full MP4 demo</a>
+</p>
+
 It also builds on lessons from our earlier
 [`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) research
 framework for AI-assisted machine-learning-potential development, active
@@ -54,16 +64,6 @@ The AI agent, trained machine learning potential (MLP) models, and the
 comprehensive dataset (containing ~90,000 atomic configurations with DFT
 energies/forces) are all hosted on the Digital Automation for Scientific
 Discovery platform (DigAuto): [https://www.digauto.org](https://www.digauto.org).
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
-    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
-  </a>
-</p>
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">Watch the full MP4 demo</a>
-</p>
 
 ## Requirements
 

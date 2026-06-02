@@ -17,6 +17,16 @@ DeepMD-kit / DP-GEN : initialisation du workspace, vérification des
 configurations, projection de l'état d'exécution, suivi des artefacts,
 inspection des logs et actions de contrôle validées par un humain.
 
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
+    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="Demo du workflow AI agent de MLP Copilot" width="640">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">Voir la demo MP4 complete</a>
+</p>
+
 ## Capacités
 
 | Domaine | Capacité |
@@ -45,16 +55,6 @@ comprehensive dataset (contenant environ 90 000 atomic configurations avec DFT
 energies/forces) sont tous hébergés sur la plateforme Digital Automation for
 Scientific Discovery (DigAuto) :
 [https://www.digauto.org](https://www.digauto.org).
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
-    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="Demo du workflow AI agent de MLP Copilot" width="640">
-  </a>
-</p>
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">Voir la demo MP4 complete</a>
-</p>
 
 ## Prérequis
 

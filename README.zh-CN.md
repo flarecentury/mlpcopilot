@@ -15,6 +15,16 @@ MLP Copilot 是面向机器学习势能工作流的垂直 agent runtime。它聚
 DeepMD-kit / DP-GEN 主动学习场景，强调 workspace 初始化、配置检查、运行状态投影、
 artifact 跟踪、日志检查，以及需要人工审批的控制操作。
 
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
+    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">查看完整 MP4 demo</a>
+</p>
+
 ## 能力概览
 
 | 模块 | 能力 |
@@ -39,16 +49,6 @@ AI agent、已训练的 machine learning potential (MLP) models，以及包含�
 带 DFT energies/forces 的 atomic configurations 的 comprehensive dataset，均托管在
 Digital Automation for Scientific Discovery 平台 DigAuto：
 [https://www.digauto.org](https://www.digauto.org)。
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
-    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
-  </a>
-</p>
-
-<p align="center">
-  <a href="./data/videos/Video1_mlp_ai_agents.mp4">查看完整 MP4 demo</a>
-</p>
 
 ## 安装要求
 
