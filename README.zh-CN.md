@@ -27,6 +27,19 @@ artifact 跟踪、日志检查，以及需要人工审批的控制操作。
 运行时只做宿主层能力。数据集验证算法、checkpoint 推理、benchmark 和具体科学判断
 应放在 MCP server 或 skill 中，而不是写进 core runtime。
 
+## 仿真数据与 DigAuto
+
+`data/` 目录已从早期的
+[`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) 项目迁移到
+MLP Copilot。该目录包含铝纳米颗粒燃烧的分子动力学轨迹
+[`data/MDtrajs/`](./data/MDtrajs/) 和对应可视化视频
+[`data/videos/`](./data/videos/)，覆盖 bare-metal 与 core-shell 体系的多个温度。
+
+AI agent、已训练的 machine learning potential (MLP) models，以及包含约 90,000 个
+带 DFT energies/forces 的 atomic configurations 的 comprehensive dataset，均托管在
+Digital Automation for Scientific Discovery 平台 DigAuto：
+[https://www.digauto.org](https://www.digauto.org)。
+
 ## 安装要求
 
 - Git。

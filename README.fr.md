@@ -30,6 +30,22 @@ Le runtime reste la couche hôte. Les algorithmes scientifiques, la sémantique
 DP-GEN, l'inférence checkpoint, les benchmarks et la validation de données
 doivent rester dans les serveurs MCP ou les skills.
 
+## Données de simulation et DigAuto
+
+Le répertoire `data/` a été migré depuis l'ancien projet
+[`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) vers MLP
+Copilot. Il contient des trajectoires de dynamique moléculaire pour la
+combustion de nanoparticules d'aluminium dans
+[`data/MDtrajs/`](./data/MDtrajs/) et les vidéos de visualisation
+correspondantes dans [`data/videos/`](./data/videos/), couvrant des systèmes
+bare-metal et core-shell à plusieurs températures.
+
+L'AI agent, les trained machine learning potential (MLP) models et le
+comprehensive dataset (contenant environ 90 000 atomic configurations avec DFT
+energies/forces) sont tous hébergés sur la plateforme Digital Automation for
+Scientific Discovery (DigAuto) :
+[https://www.digauto.org](https://www.digauto.org).
+
 ## Prérequis
 
 - Git.

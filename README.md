@@ -41,6 +41,20 @@ The runtime must stay at the host layer. Scientific algorithms, DP-GEN
 semantics, checkpoint inference, benchmark execution, and dataset-validation
 logic belong in MCP servers or skills, not in core runtime code.
 
+## Simulation Data And DigAuto
+
+The `data/` directory has been migrated from the earlier
+[`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) project.
+It contains aluminum nanoparticle combustion molecular-dynamics trajectories in
+[`data/MDtrajs/`](./data/MDtrajs/) and corresponding visualization videos in
+[`data/videos/`](./data/videos/), covering bare-metal and core-shell systems at
+multiple temperatures.
+
+The AI agent, trained machine learning potential (MLP) models, and the
+comprehensive dataset (containing ~90,000 atomic configurations with DFT
+energies/forces) are all hosted on the Digital Automation for Scientific
+Discovery platform (DigAuto): [https://www.digauto.org](https://www.digauto.org).
+
 ## Requirements
 
 - Git.

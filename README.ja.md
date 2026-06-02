@@ -29,6 +29,20 @@ runtime はホスト層に限定します。科学アルゴリズム、DP-GEN �
 checkpoint 推論、benchmark、dataset validation は core runtime ではなく
 MCP server または skill に置きます。
 
+## シミュレーションデータと DigAuto
+
+`data/` ディレクトリは、以前の
+[`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) プロジェクトから
+MLP Copilot に移行されています。このディレクトリには、アルミニウムナノ粒子燃焼の
+分子動力学トラジェクトリ [`data/MDtrajs/`](./data/MDtrajs/) と対応する可視化動画
+[`data/videos/`](./data/videos/) が含まれ、複数温度の bare-metal および core-shell
+系をカバーしています。
+
+AI agent、trained machine learning potential (MLP) models、および DFT
+energies/forces 付きの約 90,000 atomic configurations を含む comprehensive dataset
+はすべて、Digital Automation for Scientific Discovery platform (DigAuto) で
+ホストされています：[https://www.digauto.org](https://www.digauto.org)。
+
 ## 必要条件
 
 - Git。
