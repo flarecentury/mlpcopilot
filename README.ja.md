@@ -43,6 +43,16 @@ energies/forces 付きの約 90,000 atomic configurations を含む comprehensiv
 はすべて、Digital Automation for Scientific Discovery platform (DigAuto) で
 ホストされています：[https://www.digauto.org](https://www.digauto.org)。
 
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
+    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">完全版 MP4 demo を見る</a>
+</p>
+
 ## 必要条件
 
 - Git。

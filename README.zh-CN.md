@@ -40,6 +40,16 @@ AI agent、已训练的 machine learning potential (MLP) models，以及包含�
 Digital Automation for Scientific Discovery 平台 DigAuto：
 [https://www.digauto.org](https://www.digauto.org)。
 
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">
+    <img src="./data/videos/Video1_mlp_ai_agents.gif" alt="MLP Copilot AI agent workflow demo" width="640">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./data/videos/Video1_mlp_ai_agents.mp4">查看完整 MP4 demo</a>
+</p>
+
 ## 安装要求
 
 - Git。
