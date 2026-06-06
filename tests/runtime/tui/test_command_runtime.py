@@ -295,7 +295,7 @@ async def test_tui_dispatch_goal_uses_ai_summary(tmp_path) -> None:
         }
     )
     loop = _FakeLoop(tmp_path)
-    loop.provider = _FakeSummaryProvider("主动学习检查")
+    loop.provider = _FakeSummaryProvider("active learning check")
     scheduled = []
     loop._schedule_background = scheduled.append
 
@@ -303,17 +303,17 @@ async def test_tui_dispatch_goal_uses_ai_summary(tmp_path) -> None:
         config,
         loop,
         "tui:default",
-        "/goal 告诉我的妈妈的一个朋友的儿子一盒testjk",
+        "/goal prepare a dataset validation handoff note",
     )
     assert goal == (
-        "Goal set:\n告诉我的妈妈的一个朋友的儿子一盒testjk\n"
+        "Goal set:\nprepare a dataset validation handoff note\n"
         "Summary: AI refresh running in background."
     )
     assert len(scheduled) == 1
     await scheduled[0]
     session = loop.sessions.get_or_create("tui:default")
 
-    assert session.metadata["_work_goal_summary"] == "主动学习检查"
+    assert session.metadata["_work_goal_summary"] == "active learning check"
 
 async def test_tui_dispatch_handles_session_command_without_model(tmp_path) -> None:
     config = Config.model_validate(

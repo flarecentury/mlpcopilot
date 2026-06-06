@@ -3,7 +3,7 @@
 This directory contains the current product requirement documents for MLP
 Copilot.
 
-## Current Documents
+## Active PRDs
 
 - `MLPCOPILOT_RUNTIME_PRD.md`: the host runtime. Covers the profile, workspace,
   approvals, artifact index, API, Telegram, TUI host behavior, MCP/skill loading,
@@ -13,6 +13,14 @@ Copilot.
   persistence.
 - `MLPCOPILOT_MCP_SKILL_PRD.md`: the plugin layer. Covers MLP MCP servers and
   MLP skills.
+
+These three files are the current PRD source of truth.
+
+## Supporting Notes
+
+The following files are retained for implementation context. They are not active
+PRDs and should not override the three source-of-truth PRDs above:
+
 - `MLPCOPILOT_CONTEXT_MEMORY_PRD.md`: the context and memory layer. Covers
   resident rules, long-term memory, session goal/plan state, active project/run
   pointers, live DP-GEN state, and MCP source-of-truth boundaries.

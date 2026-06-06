@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 
-source_dir="${MLPCOPILOT_LATEST_DPGEN_DIR:-/home/flare/TRAE_PJS/other/tmp/latest}"
+source_dir="${MLPCOPILOT_LATEST_DPGEN_DIR:-}"
 project_id="${MLPCOPILOT_LATEST_PROJECT_ID:-latest_dpgen}"
 run_id="${MLPCOPILOT_LATEST_RUN_ID:-iter0}"
 tmpdir="${MLPCOPILOT_LATEST_TMPDIR:-$(mktemp -d /tmp/mlpcopilot-latest-tui.XXXXXX)}"
@@ -18,7 +18,7 @@ usage() {
 Usage: bash demos/dpgen_quickstart/run_latest_tui.sh [--no-tui]
 
 Environment:
-  MLPCOPILOT_LATEST_DPGEN_DIR         DP-GEN backend directory. Default: /home/flare/TRAE_PJS/other/tmp/latest
+  MLPCOPILOT_LATEST_DPGEN_DIR         Required DP-GEN backend directory.
   MLPCOPILOT_LATEST_TMPDIR            Temporary root to reuse.
   MLPCOPILOT_LATEST_CONFIG            Config path.
   MLPCOPILOT_LATEST_WORKSPACE         Workspace path.
@@ -47,6 +47,12 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+if [[ -z "$source_dir" ]]; then
+  echo "Set MLPCOPILOT_LATEST_DPGEN_DIR to a DP-GEN backend directory." >&2
+  usage >&2
+  exit 2
+fi
 
 if [[ ! -d "$source_dir" ]]; then
   echo "DP-GEN source directory not found: $source_dir" >&2

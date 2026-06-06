@@ -122,8 +122,8 @@ def test_project_command_clears_active_project() -> None:
 
 async def test_refresh_workstate_summary_uses_provider() -> None:
     session = Session(key="tui:test")
-    apply_goal_command(session, "告诉我的妈妈的一个朋友的儿子一盒testjk")
-    provider = _FakeSummaryProvider("转告测试盒")
+    apply_goal_command(session, "prepare a dataset validation handoff note")
+    provider = _FakeSummaryProvider("handoff note")
 
     result = await refresh_workstate_summary(
         session,
@@ -134,8 +134,8 @@ async def test_refresh_workstate_summary_uses_provider() -> None:
 
     assert result.used_ai is True
     assert result.error == ""
-    assert result.summary == "转告测试盒"
-    assert session.metadata["_work_goal_summary"] == "转告测试盒"
+    assert result.summary == "handoff note"
+    assert session.metadata["_work_goal_summary"] == "handoff note"
     assert provider.calls[0]["model"] == "test/model"
     assert "max_tokens" not in provider.calls[0]
 
@@ -158,8 +158,8 @@ async def test_refresh_workstate_summary_marks_fallback_without_provider() -> No
 
 async def test_refresh_workstate_summary_retries_empty_response() -> None:
     session = Session(key="tui:test")
-    apply_goal_command(session, "告诉我的妈妈的一个朋友的儿子一盒testjk")
-    provider = _FakeSummaryProvider(["", "转告测试盒"])
+    apply_goal_command(session, "prepare a dataset validation handoff note")
+    provider = _FakeSummaryProvider(["", "handoff note"])
 
     result = await refresh_workstate_summary(
         session,
@@ -169,7 +169,7 @@ async def test_refresh_workstate_summary_retries_empty_response() -> None:
     )
 
     assert result.used_ai is True
-    assert result.summary == "转告测试盒"
+    assert result.summary == "handoff note"
     assert len(provider.calls) == 2
     assert "empty visible content" in provider.calls[1]["messages"][0]["content"]
 
@@ -194,10 +194,10 @@ async def test_refresh_workstate_summary_reports_empty_finish_reason() -> None:
 
 async def test_refresh_workstate_summary_reports_reasoning_only_length_response() -> None:
     session = Session(key="tui:test")
-    apply_goal_command(session, "uuu告诉我的妈妈的一个朋友的儿子一盒testjk监控和化工板块")
+    apply_goal_command(session, "prepare validation status summary for handoff")
     provider = _FakeSummaryProvider([
-        LLMResponse(content="", finish_reason="length", reasoning_content="思考中"),
-        LLMResponse(content="", finish_reason="length", reasoning_content="仍然只有思考"),
+        LLMResponse(content="", finish_reason="length", reasoning_content="thinking"),
+        LLMResponse(content="", finish_reason="length", reasoning_content="still reasoning"),
     ])
 
     result = await refresh_workstate_summary(
@@ -209,8 +209,8 @@ async def test_refresh_workstate_summary_reports_reasoning_only_length_response(
 
     assert result.used_ai is False
     assert result.error == "empty response finish=length reasoning_only"
-    assert result.summary == "uuu告诉我的妈妈的一个朋友的儿子一盒t"
-    assert session.metadata["_work_goal_summary"] == "uuu告诉我的妈妈的一个朋友的儿子一盒t"
+    assert result.summary == "prepare validation status summary for handoff"
+    assert session.metadata["_work_goal_summary"] == "prepare validation status summary for handoff"
     assert len(provider.calls) == 2
 
 
