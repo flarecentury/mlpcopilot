@@ -40,7 +40,8 @@ real MLP/DP-GEN work.
 - Dataset, model-eval, report, and agentic-file-search MCP servers start from
   the source tree.
 - MLP skills are discoverable:
-  `mlp-active-learning`, `dpgen-machine-writer`, `mlp-dataset-validation`,
+  `mlp-active-learning`, `dpgen-machine-writer`,
+  `mlp-initial-dataset-preparation`, `mlp-dataset-validation`,
   `mlp-checkpoint-evaluation`, `mlp-validation-planner`,
   `mlp-ood-test-advisor`.
 - Disabled generic skills remain disabled by default unless intentionally

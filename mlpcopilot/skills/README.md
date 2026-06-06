@@ -29,6 +29,7 @@ The skill format and metadata structure follow OpenClaw's conventions to maintai
 | `mlp-active-learning` | Plan, configure, validate, monitor, and diagnose MLP active-learning runs |
 | `mlp-checkpoint-evaluation` | Inspect checkpoints and use existing metrics artifacts for criteria checks and comparisons |
 | `mlp-dataset-validation` | Inspect and validate MLP datasets through dataset MCP evidence |
+| `mlp-initial-dataset-preparation` | Prepare traceable initial MLP training datasets before DP-GEN or active learning |
 | `mlp-validation-planner` | Build project-specific MLP validation plans from evidence, criteria, and compute budget |
 | `summarize` | Summarize URLs, files, and YouTube videos |
 | `tmux` | Remote-control tmux sessions |

@@ -88,7 +88,7 @@ As of the current implementation state:
 - OpenAI-compatible API approval handlers exist.
 - MLP MCP server packages exist for training control, dataset validation, and first-pass model metrics ingestion.
 - The training controller MCP currently uses a DP-GEN backend provider and includes read/config/status/log/report tools plus run, stop, and rewind controls; approval is enforced by the runtime when these tools are called through the agent.
-- Initial MLP skills exist, including `mlp-active-learning`, `dpgen-machine-writer`, `mlp-dataset-validation`, `mlp-validation-planner`, and `mlp-checkpoint-evaluation`; model inference skill packs are not complete yet.
+- Initial MLP skills exist, including `mlp-active-learning`, `dpgen-machine-writer`, `mlp-initial-dataset-preparation`, `mlp-dataset-validation`, `mlp-validation-planner`, and `mlp-checkpoint-evaluation`; model inference skill packs are not complete yet.
 - The old mixed PRD was removed and replaced by the split PRDs under `prd/`.
 
 ## Inherited MLPCopilot Facts

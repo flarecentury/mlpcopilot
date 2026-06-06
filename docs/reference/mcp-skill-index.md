@@ -126,6 +126,7 @@ repository source search.
 | --- | --- |
 | `mlp-active-learning` | Planning or operating MLP active-learning workflows, especially DeepMD-kit/DP-GEN |
 | `dpgen-machine-writer` | Writing or reviewing DP-GEN `machine.json`, wrappers, and scheduler resources |
+| `mlp-initial-dataset-preparation` | Preparing traceable initial MLP training datasets before DP-GEN or active learning |
 | `mlp-dataset-validation` | Inspecting or validating MLP datasets before training/evaluation/reporting |
 | `mlp-checkpoint-evaluation` | Inspecting checkpoints, running DeePMD-kit tests, comparing metrics |
 | `mlp-validation-planner` | Creating a project-specific validation plan and evidence gates |
@@ -145,6 +146,7 @@ are disabled by default to keep the product focused.
 | Diagnose DP-GEN failure | `mlp-active-learning` | `collect_training_logs`, `analyze_training_failure`, `inspect_dispatcher_job` |
 | Rewind to an earlier DP-GEN point | `mlp-active-learning` | `snapshot_training_state`, `plan_training_rewind`, `apply_training_rewind` |
 | Write or review `machine.json` | `dpgen-machine-writer` | `validate_training_inputs`, `validate_machine_runtime`, config update tools |
+| Prepare initial training data | `mlp-initial-dataset-preparation` | Dataset tools when available; DP-GEN config generation after paths are ready |
 | Validate dataset layout | `mlp-dataset-validation` | `inspect_dataset`, `validate_dataset_integrity`, `build_dataset_validation_report` |
 | Evaluate checkpoint metrics | `mlp-checkpoint-evaluation` | `inspect_checkpoint`, `run_deepmd_test`, `build_checkpoint_benchmark_report` |
 | Make a validation plan | `mlp-validation-planner` | Dataset, training, model, and report tools as available |
