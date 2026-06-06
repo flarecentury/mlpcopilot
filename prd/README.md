@@ -19,7 +19,7 @@ These three files are the current PRD source of truth.
 ## Supporting Notes
 
 The following files are retained for implementation context. They are not active
-PRDs and should not override the three source-of-truth PRDs above:
+PRDs; the three files above remain the source of truth:
 
 - `MLPCOPILOT_CONTEXT_MEMORY_PRD.md`: the context and memory layer. Covers
   resident rules, long-term memory, session goal/plan state, active project/run
@@ -44,20 +44,18 @@ capabilities:
 
 ## MCP Organization Principle
 
-Do not merge every MLP tool into a single MCP server just for uniformity. Keep
-MCP servers separated by responsibility for now: training controller, dataset
-audit, model evaluation, and report aggregation. The runtime provides unified
-discovery, approvals, logs, artifact indexing, and TUI/API presentation. Each MCP
-server owns its scientific or engineering tool surface.
+MCP servers are currently separated by responsibility: training controller,
+dataset audit, model evaluation, and report aggregation. The runtime provides
+unified discovery, approvals, logs, artifact indexing, and TUI/API presentation.
+Each MCP server owns its domain or engineering tool surface.
 
-Reviewers usually care that evidence is reproducible, inputs and outputs have
-hashes, metrics come from tool artifacts, and human decisions are traceable. They
-do not usually care whether every tool runs inside one MCP process.
+Review priorities are reproducible evidence, input/output hashes, metrics from
+tool artifacts, and traceable human decisions.
 
 ## Deferred Backlog
 
-The following items are lower priority. Do not treat them as near-term drivers
-unless they are explicitly raised again:
+The following items are lower priority and move into near-term work only when
+raised again:
 
 - `mlp_coverage_mcp`.
 - Fixed OOD/gap audit tools and deep dataset science checks: unit consistency,
@@ -68,7 +66,7 @@ unless they are explicitly raised again:
 - Manual terminal visual smoke and real deployment smoke, to be done before a
   release.
 
-## Boundary Rule
+## Scope Note
 
-Runtime PRD work must not introduce scientific algorithms into `mlpcopilot`
-core. Scientific logic must remain in MCP servers or skills.
+The runtime PRD covers shared runtime capabilities. MLP workflow details are
+specified in the MCP server and skill PRDs.

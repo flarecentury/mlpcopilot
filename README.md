@@ -47,10 +47,6 @@ tracking, log inspection, and human-approved control actions.
 | Traceability | Run manifests, artifact hashes, approval decisions, tool logs, status projections |
 | Human control | Blocking approvals for high-cost or destructive actions |
 
-The runtime must stay at the host layer. Scientific algorithms, DP-GEN
-semantics, checkpoint inference, benchmark execution, and dataset-validation
-logic belong in MCP servers or skills, not in core runtime code.
-
 ## Simulation Data And DigAuto
 
 The `data/` directory has been migrated from the earlier
@@ -161,19 +157,17 @@ uv run mlpcopilot tui \
   --workspace ~/.mlpcopilot/workspace
 ```
 
-## Work With An Existing DP-GEN Directory
+## Start With Initial Data
 
-Project an existing DP-GEN working directory into the MLP Copilot workspace:
+Use the `mlp-initial-dataset-preparation` skill to help plan an initial dataset
+generation strategy before DP-GEN or active learning. It guides structure
+selection, AIMD/static DFT labeling plans, conversion targets, validation
+checks, and handoff paths such as DP-GEN `init_data_sys`.
 
-```bash
-bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir --no-tui
-```
-
-Then open the workbench:
-
-```bash
-uv run mlpcopilot tui --config ~/.mlpcopilot/config.json --session tui:local
-```
+Before running training or labeling jobs, configure DeepMD-kit/DP, VASP, CP2K,
+and related executables for your own HPC environment. For portable and
+reproducible runtime environments, Apptainer is recommended:
+[`apptainer/apptainer`](https://github.com/apptainer/apptainer).
 
 ## Common Commands
 
@@ -192,7 +186,6 @@ TUI entrypoints:
 ```bash
 uv run mlpcopilot tui
 uv run mlpcopilot tui --once
-bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir
 ```
 
 OpenAI-compatible API:
@@ -236,8 +229,7 @@ uv run --extra dev pytest -q
 ```
 
 The codebase may still contain inherited general-purpose capabilities. For MLP
-Copilot work, keep changes scoped to the current PRD and preserve the
-runtime/plugin boundary.
+Copilot work, the current PRDs describe the active product scope.
 
 ## License And Acknowledgements
 

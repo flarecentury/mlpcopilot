@@ -1,9 +1,8 @@
 # MLP Copilot Documentation
 
 This directory contains implementation-facing documentation for the current MLP
-Copilot repository. Product requirements and boundary decisions remain in
-[`../prd/`](../prd/); these docs explain how the current implementation is used,
-operated, and maintained.
+Copilot repository. Product requirements live in [`../prd/`](../prd/); these
+docs explain how the current implementation is used, operated, and maintained.
 
 ## Start Here
 

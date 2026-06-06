@@ -35,10 +35,6 @@ workspace 初期化、設定確認、実行状態の投影、artifact 追跡、�
 | トレーサビリティ | Run manifest、artifact hash、approval decision、tool log、state projection |
 | 人間による制御 | 高コストまたは破壊的な操作に対するブロッキング承認 |
 
-runtime はホスト層に限定します。科学アルゴリズム、DP-GEN セマンティクス、
-checkpoint 推論、benchmark、dataset validation は core runtime ではなく
-MCP server または skill に置きます。
-
 ## シミュレーションデータと DigAuto
 
 `data/` ディレクトリは、以前の
@@ -143,19 +139,17 @@ uv run mlpcopilot tui \
   --workspace ~/.mlpcopilot/workspace
 ```
 
-## 既存 DP-GEN ディレクトリを使う
+## 初期データから始める
 
-既存の DP-GEN 作業ディレクトリを MLP Copilot workspace に投影：
+DP-GEN や active learning に入る前に、`mlp-initial-dataset-preparation`
+skill を使って初期データセット生成戦略を整理できます。この skill は構造選択、
+AIMD/static DFT ラベリング計画、変換先フォーマット、検証チェック、DP-GEN
+`init_data_sys` などの受け渡しパスを決める支援をします。
 
-```bash
-bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir --no-tui
-```
-
-その後 TUI を起動：
-
-```bash
-uv run mlpcopilot tui --config ~/.mlpcopilot/config.json --session tui:local
-```
+training や labeling job を実行する前に、自分の HPC 環境に合わせて
+DeepMD-kit/DP、VASP、CP2K などの実行ファイルと依存関係を設定してください。
+移植性と再現性のある実行環境には Apptainer を推奨します：
+[`apptainer/apptainer`](https://github.com/apptainer/apptainer)。
 
 ## よく使うコマンド
 

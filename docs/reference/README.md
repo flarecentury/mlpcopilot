@@ -12,4 +12,4 @@ keys, API routes, and SDK calls. Keep examples current with the implementation.
 | [`python-sdk.md`](./python-sdk.md) | Programmatic Python API |
 
 When config defaults change, update this directory and confirm whether
-[`../../prd/`](../../prd/) also needs a boundary or requirement update.
+[`../../prd/`](../../prd/) also needs a product requirement update.

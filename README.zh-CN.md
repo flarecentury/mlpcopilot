@@ -34,9 +34,6 @@ artifact 跟踪、日志检查，以及需要人工审批的控制操作。
 | 可追溯性 | Run manifest、artifact hash、approval decision、tool log、状态投影 |
 | 人工控制 | 高成本或破坏性动作必须阻塞等待人工审批 |
 
-运行时只做宿主层能力。数据集验证算法、checkpoint 推理、benchmark 和具体科学判断
-应放在 MCP server 或 skill 中，而不是写进 core runtime。
-
 ## 仿真数据与 DigAuto
 
 `data/` 目录已从早期的
@@ -140,19 +137,15 @@ uv run mlpcopilot tui \
   --workspace ~/.mlpcopilot/workspace
 ```
 
-## 接入已有 DP-GEN 工作目录
+## 从初始数据开始
 
-将已有 DP-GEN 工作目录投影到 MLP Copilot workspace：
+可以使用 `mlp-initial-dataset-preparation` skill 协助制定初始数据集生成策略，
+再进入 DP-GEN 或主动学习流程。它会引导结构选择、AIMD/static DFT 标注计划、
+数据格式转换、验证检查，以及 DP-GEN `init_data_sys` 等交接路径。
 
-```bash
-bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir --no-tui
-```
-
-然后打开工作台：
-
-```bash
-uv run mlpcopilot tui --config ~/.mlpcopilot/config.json --session tui:local
-```
+在运行训练或标注任务前，请根据自己的 HPC 环境配置 DeepMD-kit/DP、VASP、
+CP2K 等可执行程序和依赖。为了提升运行环境的可移植性和可复现性，推荐使用
+Apptainer：[`apptainer/apptainer`](https://github.com/apptainer/apptainer)。
 
 ## 常用命令
 

@@ -32,8 +32,8 @@ MLPCOPILOT_DEMO_TMPDIR=/tmp/mlpcopilot-demo bash demos/dpgen_quickstart/run_demo
 - Feed the TUI Artifacts and Companion panes from decoupled UI state files.
 - Advance `record.dpgen` from task 0 to task 8 with lightweight playback.
 
-## Important boundary
+## Demo Scope
 
-The fixture is intentionally fake scientific output. It is for runtime and UX
-validation only. Real training, exploration, labeling, dataset validation, and
-model metrics must remain in MCP servers or skills, not in the runtime core.
+The fixture uses mock outputs for a runtime and UX preview. Production training,
+exploration, labeling, dataset validation, and model metrics are run through the
+relevant MCP servers or skills.

@@ -36,10 +36,6 @@ inspection des logs et actions de contrôle validées par un humain.
 | Traçabilité | Run manifests, hashes d'artefacts, décisions d'approbation, logs d'outils, projections d'état |
 | Contrôle humain | Approbations bloquantes pour actions coûteuses ou destructrices |
 
-Le runtime reste la couche hôte. Les algorithmes scientifiques, la sémantique
-DP-GEN, l'inférence checkpoint, les benchmarks et la validation de données
-doivent rester dans les serveurs MCP ou les skills.
-
 ## Données de simulation et DigAuto
 
 Le répertoire `data/` a été migré depuis l'ancien projet
@@ -147,19 +143,19 @@ uv run mlpcopilot tui \
   --workspace ~/.mlpcopilot/workspace
 ```
 
-## Utiliser un répertoire DP-GEN existant
+## Commencer par les données initiales
 
-Projeter un répertoire de travail DP-GEN dans le workspace MLP Copilot :
+Utilisez le skill `mlp-initial-dataset-preparation` pour préparer une stratégie
+de génération de dataset initial avant DP-GEN ou l'active learning. Il guide le
+choix des structures, le plan de labellisation AIMD/static DFT, les formats de
+conversion, les vérifications de validation et les chemins de passage comme
+`init_data_sys` pour DP-GEN.
 
-```bash
-bash run_tui.sh --dpgen-dir /path/to/dpgen/workdir --no-tui
-```
-
-Puis ouvrir le poste de travail :
-
-```bash
-uv run mlpcopilot tui --config ~/.mlpcopilot/config.json --session tui:local
-```
+Avant de lancer les jobs d'entraînement ou de labellisation, configurez
+DeepMD-kit/DP, VASP, CP2K et les exécutables associés selon votre environnement
+HPC. Pour des environnements d'exécution portables et reproductibles,
+Apptainer est recommandé :
+[`apptainer/apptainer`](https://github.com/apptainer/apptainer).
 
 ## Commandes utiles
 

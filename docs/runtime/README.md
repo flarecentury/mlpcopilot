@@ -7,6 +7,5 @@ agent context, memory, session state, and other host-runtime behavior.
 | --- | --- |
 | [`memory.md`](./memory.md) | Session memory and Dream consolidation behavior |
 
-Runtime docs should describe host behavior only. Plugin-specific science,
-dataset validation, checkpoint analysis, and DP-GEN backend logic belong in MCP
-or skill documentation.
+Plugin workflow details such as dataset validation, checkpoint analysis, and
+DP-GEN backend behavior are documented with the relevant MCP package or skill.
