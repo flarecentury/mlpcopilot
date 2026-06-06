@@ -30,7 +30,7 @@ artifact 跟踪、日志检查，以及需要人工审批的控制操作。
 | 模块 | 能力 |
 | --- | --- |
 | Runtime host | Agent loop、session、memory、TUI、Telegram/API、MCP client、workspace、approval、artifact index |
-| MLP plugins | DP-GEN 控制、数据集验证、模型评估、报告、本地文档搜索 |
+| MLP plugins | 初始数据集准备、DP-GEN 控制、数据集验证、模型评估、报告、本地文档搜索 |
 | 可追溯性 | Run manifest、artifact hash、approval decision、tool log、状态投影 |
 | 人工控制 | 高成本或破坏性动作必须阻塞等待人工审批 |
 
@@ -84,6 +84,21 @@ uv sync --extra dev
 uv run mlpcopilot --help
 uv run mlpcopilot mlp capabilities
 ```
+
+## Agentic File Search 配置
+
+随包提供的 `agentic-file-search` MCP package 使用单独的环境配置文件。可以从
+[`mlpcopilot/mcps/agentic-file-search/.env.example`](./mlpcopilot/mcps/agentic-file-search/.env.example)
+复制，或运行初始化脚本：
+
+```bash
+cd mlpcopilot/mcps/agentic-file-search
+scripts/init-skill.sh
+```
+
+知识库根目录 `FS_EXPLORER_MCP_ROOT`、索引库 `FS_EXPLORER_DB_PATH`，以及可选的
+OpenAI-compatible endpoint 在这里配置。这些设置独立于主配置
+`~/.mlpcopilot/config.json`。
 
 ## 第一次使用
 

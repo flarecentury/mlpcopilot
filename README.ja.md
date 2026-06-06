@@ -31,7 +31,7 @@ workspace 初期化、設定確認、実行状態の投影、artifact 追跡、�
 | 領域 | 機能 |
 | --- | --- |
 | Runtime host | Agent loop、session、memory、TUI、Telegram/API gateway、MCP client、workspace、approval、artifact index |
-| MLP plugins | DP-GEN 制御、dataset validation、model evaluation、report、ローカル文書検索 |
+| MLP plugins | 初期データセット準備、DP-GEN 制御、dataset validation、model evaluation、report、ローカル文書検索 |
 | トレーサビリティ | Run manifest、artifact hash、approval decision、tool log、state projection |
 | 人間による制御 | 高コストまたは破壊的な操作に対するブロッキング承認 |
 
@@ -87,6 +87,21 @@ CLI を確認：
 uv run mlpcopilot --help
 uv run mlpcopilot mlp capabilities
 ```
+
+## Agentic File Search 設定
+
+同梱の `agentic-file-search` MCP package は独自の環境設定ファイルを使います。
+[`mlpcopilot/mcps/agentic-file-search/.env.example`](./mlpcopilot/mcps/agentic-file-search/.env.example)
+をテンプレートとして使うか、初期化スクリプトを実行してください：
+
+```bash
+cd mlpcopilot/mcps/agentic-file-search
+scripts/init-skill.sh
+```
+
+知識ベースのルート `FS_EXPLORER_MCP_ROOT`、インデックス DB
+`FS_EXPLORER_DB_PATH`、任意の OpenAI-compatible endpoint はここで設定します。
+これらはメイン設定 `~/.mlpcopilot/config.json` とは別です。
 
 ## 初回起動
 

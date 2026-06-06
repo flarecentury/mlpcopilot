@@ -32,7 +32,7 @@ inspection des logs et actions de contrôle validées par un humain.
 | Domaine | Capacité |
 | --- | --- |
 | Runtime hôte | Agent loop, sessions, mémoire, TUI, passerelles Telegram/API, client MCP, workspace, approvals, index d'artefacts |
-| Plugins MLP | Contrôle DP-GEN, validation de datasets, évaluation de modèles, rapports, recherche documentaire locale |
+| Plugins MLP | Préparation du dataset initial, contrôle DP-GEN, validation de datasets, évaluation de modèles, rapports, recherche documentaire locale |
 | Traçabilité | Run manifests, hashes d'artefacts, décisions d'approbation, logs d'outils, projections d'état |
 | Contrôle humain | Approbations bloquantes pour actions coûteuses ou destructrices |
 
@@ -90,6 +90,22 @@ Vérifier la CLI :
 uv run mlpcopilot --help
 uv run mlpcopilot mlp capabilities
 ```
+
+## Configuration d'Agentic File Search
+
+Le package MCP `agentic-file-search` fourni avec le dépôt utilise son propre
+fichier d'environnement. Utilisez
+[`mlpcopilot/mcps/agentic-file-search/.env.example`](./mlpcopilot/mcps/agentic-file-search/.env.example)
+comme modèle, ou lancez son script d'initialisation :
+
+```bash
+cd mlpcopilot/mcps/agentic-file-search
+scripts/init-skill.sh
+```
+
+Configurez `FS_EXPLORER_MCP_ROOT`, `FS_EXPLORER_DB_PATH` et l'endpoint
+OpenAI-compatible optionnel dans ce fichier. Ces paramètres sont séparés de la
+configuration principale `~/.mlpcopilot/config.json`.
 
 ## Première utilisation
 
