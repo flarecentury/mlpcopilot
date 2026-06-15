@@ -125,6 +125,16 @@ Create or update the local config and default workspace:
 uv run mlpcopilot onboard
 ```
 
+Recommended model setup: log in to the OpenAI Codex provider and use the latest
+Codex GPT model available to your account.
+
+```bash
+uv run mlpcopilot provider login openai-codex
+```
+
+After login, set the model during onboarding or switch from the TUI with
+`/model openai-codex/gpt-5.3-codex`.
+
 The default workspace is:
 
 ```text

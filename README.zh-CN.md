@@ -105,6 +105,16 @@ OpenAI-compatible endpoint 在这里配置。这些设置独立于主配置
 uv run mlpcopilot onboard
 ```
 
+推荐的模型配置：先登录 OpenAI Codex provider，然后使用账号可用的最新 Codex
+GPT 模型。
+
+```bash
+uv run mlpcopilot provider login openai-codex
+```
+
+登录后，可以在 onboarding 中设置模型，也可以在 TUI 里用
+`/model openai-codex/gpt-5.3-codex` 切换。
+
 默认 workspace：
 
 ```text

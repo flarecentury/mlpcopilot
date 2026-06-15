@@ -107,6 +107,16 @@ scripts/init-skill.sh
 uv run mlpcopilot onboard
 ```
 
+推奨モデル設定：OpenAI Codex provider にログインし、アカウントで利用できる
+最新の Codex GPT model を使います。
+
+```bash
+uv run mlpcopilot provider login openai-codex
+```
+
+ログイン後、onboarding でモデルを設定するか、TUI から
+`/model openai-codex/gpt-5.3-codex` で切り替えます。
+
 デフォルト workspace：
 
 ```text
