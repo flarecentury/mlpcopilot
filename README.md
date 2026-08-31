@@ -1,3 +1,5 @@
+
+
 <h1 align="center">MLP Copilot</h1>
 
 <p align="center">
@@ -26,6 +28,8 @@ approvals, and traceable decisions matter.
 <p align="center">
   <a href="./data/videos/Video1_mlp_ai_agents.mp4">Watch the full MP4 demo</a>
 </p>
+
+For a local no-HPC preview, see the [DP-GEN quickstart demo](./demos/dpgen_quickstart/README.md).
 
 It also builds on lessons from our earlier
 [`flarecentury/Auto-MLP`](https://github.com/flarecentury/Auto-MLP) research
